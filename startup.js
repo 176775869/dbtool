@@ -435,10 +435,8 @@ var startup = (function(text) {
 				}
 			};
 			if(Configure.isAfterTrading() || Configure.isWeekend()){
-				document.getElementById('mode').value = 0;
 				fp()
 			} else {
-				document.getElementById('mode').value = 1;
 				dp();
 			}
 			Configure.setMode($('#mode')[0].value);
