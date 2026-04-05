@@ -236,6 +236,7 @@ var Configure = (function(){
 		str=str.replace('H', '混沌');
 		str=str.replace('P', '炮灰');
 		str=str.replace('Q', '趋势');
+		str=str.replace('T', '共振锚点');
 		if(str.indexOf('w') > 0 ||  str.indexOf('W')>0) {
 			var index = str.indexOf('w') >= 0 ? str.indexOf('w') : str.indexOf('W');
 			str = str.substr(0, index) + winCtxts[parseInt(str.substr(index+1, index + 1))] + 
