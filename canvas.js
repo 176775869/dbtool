@@ -215,10 +215,12 @@ var canvas = (function(canvas) {
 		ctx.lineTo(siteX + siteWidth, siteY);
 		ctx.lineTo(siteX,siteY);
 		
+		var Toffset = -1;
+		
 		// 画日期
 		for(i = 0; i < Days.length; i ++) {
 			// 日期网格
-			var d = new Date(Configure.formatExcelDate(Days[i][Configure.title2.date], '/'));
+			/*var d = new Date(Configure.formatExcelDate(Days[i][Configure.title2.date], '/'));
 			if (d.getDay () == 1) {   // 星期一
 				ctx.font="14px 楷体";
 				ctx.fillStyle = Configure.site_color;
@@ -229,26 +231,51 @@ var canvas = (function(canvas) {
 				ctx.strokeStyle = Configure.site_color;
 				ctx.moveTo(siteX + cellWidth  * i,siteY);
 				ctx.lineTo(siteX + cellWidth  * i,siteY + siteHeight);
-			}
+			}*/
 			//画大周期
 			var cycle = workbook.getEmotionalCycles(Configure.formatExcelDate(Days[i][Configure.title2.date]));
 			if (cycle && !!cycle.cycles && cycle.isTurning) {
-				ctx.font= cycle.cycles.includes('T') ? "14px 楷体 bold" :
+				ctx.font= cycle.cycles.includes('T') || cycle.cycles.includes('t') ? "16px 楷体 bold" :
 													"12px 楷体 bold";
 				ctx.fillStyle = cycle.cycles.includes('M') ? 'red' : 
-					cycle.cycles.includes('Q') || cycle.cycles.includes('T') ? 'blue' :
+					cycle.cycles.includes('Q') ? 'blue' :
+					cycle.cycles.includes('T') || cycle.cycles.includes('t') ? 'red' :
 					cycle.cycles.includes('m') || cycle.cycles.includes('q') ? 'green' :
 					cycle.cycles.includes('H') || cycle.cycles.includes('P') ? 'black' :
 					cycle.cycles.includes('s') || cycle.cycles.includes('S') ? 'grey' : Configure.site_color;
-				if (!cycle.cycles.indexOf('w') == 0 && !cycle.cycles.indexOf('w') == 0) {    // 宏观周期阶段
-					ctx.fillText(cycle.cycles.substring(0, cycle.cycles.indexOf('w')), 
-														siteX + cellWidth  * i, siteY -5);
+				// 宏观周期阶段
+				if (/[TtQqMmHP]/.test(cycle.cycles)) {
+					ctx.fillText(/[Ww]/.test(cycle.cycles) ? 
+									cycle.cycles.substring(0, cycle.cycles.indexOf('w')) : cycle.cycles, 
+									siteX + cellWidth  * i, siteY -5);
 					if (!!cycle.hotpoint) {
 						ctx.font="12px 楷体";
 						ctx.fillStyle = 'orange';
 						ctx.fillText(cycle.hotpoint, siteX + cellWidth  * i + 20, siteY -5);
 					}
-				}  
+					const regex = new RegExp(`[${Configure.TpiontShow}]`);
+					if (regex.test(cycle.cycles)) {
+						Toffset = i;  // 记录锚点位置
+					}
+				} else if (Toffset < i && Toffset != -1 &&    //box上面的数字
+							Configure.emotionProgress.includes(i-Toffset)) { 
+					ctx.font="12px 楷体";
+					ctx.fillStyle = 'red';
+					ctx.fillText('+' + (i - Toffset), siteX + cellWidth  * i, siteY -5);
+				}
+				
+				// 周期网格
+				if (/[TtQMHP]/.test(cycle.cycles)) {
+						ctx.font="14px 楷体";
+						ctx.fillStyle = Configure.site_color;
+						ctx.fillText(Configure.formatExcelDate(Days[i][Configure.title2.date], '').substr(4,4),
+							 siteX + cellWidth  * i, siteY + siteHeight + 20);
+					 
+						ctx.lineWidth="0.5";
+						ctx.strokeStyle = Configure.site_color;
+						ctx.moveTo(siteX + cellWidth  * i,siteY);
+						ctx.lineTo(siteX + cellWidth  * i,siteY + siteHeight);
+				}
 				if(Configure.getColorFromWinC(cycle.cycles).color){   // 微观情绪
 					ctx.fillStyle = Configure.getColorFromWinC(cycle.cycles).color;
 					ctx.fillRect(siteX + cellWidth  * i, siteY + siteHeight*(1- winFactor) + 1, cellWidth, 5);

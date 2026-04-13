@@ -236,7 +236,8 @@ var Configure = (function(){
 		str=str.replace('H', '混沌');
 		str=str.replace('P', '炮灰');
 		str=str.replace('Q', '趋势');
-		str=str.replace('T', '共振锚点');
+		str=str.replace('T', '锚点');
+		str=str.replace('t', '预置锚点');
 		if(str.indexOf('w') > 0 ||  str.indexOf('W')>0) {
 			var index = str.indexOf('w') >= 0 ? str.indexOf('w') : str.indexOf('W');
 			str = str.substr(0, index) + winCtxts[parseInt(str.substr(index+1, index + 1))] + 
@@ -643,6 +644,9 @@ var Configure = (function(){
 	
 	var LocalStore_history_period = 7;   // locastory 保留数据的期限，需要清理。
 	
+	var TpiontShow = 'TtM';                 // 需要显示周期节奏的锚点符号
+	var emotionProgress = [0, 2, 4, 6, 8];  // 9天标准周期节奏。数值T+n,分别对应启动（轮动）、分歧、确认加速、2次分歧、退潮E。
+	
 	var selectIndicators = [
 							
 							//	{name:'全A等权'}, 
@@ -862,6 +866,8 @@ var Configure = (function(){
 		Echelons_ticket_NUM:Echelons_ticket_NUM,
 		Echelons_handover_factor:Echelons_handover_factor,
 		EmotionAngleDeafultDays:EmotionAngleDeafultDays,
+		TpiontShow:TpiontShow,
+		emotionProgress:emotionProgress,
 		site_color:site_color,
 		boardHeight_color:boardHeight_color,
 		sz_color:sz_color,
