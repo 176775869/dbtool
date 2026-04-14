@@ -644,6 +644,7 @@ var Configure = (function(){
 	
 	var LocalStore_history_period = 7;   // locastory 保留数据的期限，需要清理。
 	
+	var TpiontLine = 'TtQMHP';
 	var TpiontShow = 'TtM';                 // 需要显示周期节奏的锚点符号
 	var emotionProgress = [0, 2, 4, 6, 8];  // 9天标准周期节奏。数值T+n,分别对应启动（轮动）、分歧、确认加速、2次分歧、退潮E。
 	
@@ -866,6 +867,7 @@ var Configure = (function(){
 		Echelons_ticket_NUM:Echelons_ticket_NUM,
 		Echelons_handover_factor:Echelons_handover_factor,
 		EmotionAngleDeafultDays:EmotionAngleDeafultDays,
+		TpiontLine:TpiontLine,
 		TpiontShow:TpiontShow,
 		emotionProgress:emotionProgress,
 		site_color:site_color,

@@ -253,8 +253,7 @@ var canvas = (function(canvas) {
 						ctx.fillStyle = 'orange';
 						ctx.fillText(cycle.hotpoint, siteX + cellWidth  * i + 20, siteY -5);
 					}
-					const regex = new RegExp(`[${Configure.TpiontShow}]`);
-					if (regex.test(cycle.cycles)) {
+					if (new RegExp(`[${Configure.TpiontShow}]`).test(cycle.cycles)) {
 						Toffset = i;  // 记录锚点位置
 					}
 				} else if (Toffset < i && Toffset != -1 &&    //box上面的数字
@@ -265,7 +264,7 @@ var canvas = (function(canvas) {
 				}
 				
 				// 周期网格
-				if (/[TtQMHP]/.test(cycle.cycles)) {
+				if (new RegExp(`[${Configure.TpiontLine}]`).test(cycle.cycles)) {
 						ctx.font="14px 楷体";
 						ctx.fillStyle = Configure.site_color;
 						ctx.fillText(Configure.formatExcelDate(Days[i][Configure.title2.date], '').substr(4,4),
