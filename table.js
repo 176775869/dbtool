@@ -353,7 +353,7 @@ var table = (function(){
 						break;
 					case 'rise_1':				
 						td.innerHTML = value.toString().replace(/\%/g, '');
-						if(value >= 0) {
+						if(parseFloat(value) >= 0) {
 							td.className = 'fontRed';
 						} else {
 							td.className = 'fontGreen';
