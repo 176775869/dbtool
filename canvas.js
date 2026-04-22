@@ -257,7 +257,7 @@ var canvas = (function(canvas) {
 						Toffset = i;  // 记录锚点位置
 					}
 				} else if (Toffset < i && Toffset != -1 &&    //box上面的数字
-							Configure.emotionProgress.includes(i-Toffset)) { 
+								JSON.parse(Configure.emotionProgress.trim()).includes(i-Toffset)) { 
 					ctx.font="12px 楷体";
 					ctx.fillStyle = 'red';
 					ctx.fillText('+' + (i - Toffset), siteX + cellWidth  * i, siteY -5);
