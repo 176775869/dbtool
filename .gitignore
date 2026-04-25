@@ -1,7 +1,9 @@
 # file 不需要提交的文件
 Table.xls
 Table1.xls
+strategy_*.md
 rt/复盘图表.xlsx
 py/*.txt
 py/*.json
 py/*.csv
+py/*.md
