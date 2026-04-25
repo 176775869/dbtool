@@ -1,7 +1,7 @@
-
 # file 不需要提交的文件
-
 Table.xls
 Table1.xls
-./rt/复盘图表.xlsx
-./py/*.txt
+rt/复盘图表.xlsx
+py/*.txt
+py/*.json
+py/*.csv
