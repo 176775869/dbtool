@@ -6,10 +6,9 @@ import os
 from datetime import datetime
 
 def get_output_path(filename):
+    """获取文件保存路径：与脚本同目录"""
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    py_dir = os.path.join(script_dir, '..', 'py')
-    os.makedirs(py_dir, exist_ok=True)
-    return os.path.join(py_dir, filename)
+    return os.path.join(script_dir, filename)
 
 def get_index_quotes():
     url = ("http://push2.eastmoney.com/api/qt/ulist.np/get?"
@@ -72,20 +71,23 @@ if __name__ == '__main__':
             '最低': item.get('f16', 0),
             '今开': item.get('f17', 0),
             '昨收': item.get('f18', 0),
+            # 保留原始涨跌家数，用于加总
+            '上涨': item.get('f104', 0) if item.get('f104') is not None else 0,
+            '下跌': item.get('f105', 0) if item.get('f105') is not None else 0,
         }
     
     print("正在计算20日均线...")
     sh_closes = get_index_daily_kline('1.000001', 25)
     ma20 = round(sum(sh_closes[-20:]) / 20, 2) if len(sh_closes) >= 20 else sh_closes[-1]
     
-    # 提取涨跌家数（以第一个指数为准，通常上证指数有全市场统计）
-    up_count = None
-    down_count = None
-    for item in index_list:
-        if item.get('f14') == '上证指数':
-            up_count = item.get('f104', None)
-            down_count = item.get('f105', None)
-            break
+    # 沪深两市涨跌家数相加（上证 + 深证成指）
+    sh_up = index_dict.get('上证指数', {}).get('上涨', 0)
+    sh_down = index_dict.get('上证指数', {}).get('下跌', 0)
+    sz_up = index_dict.get('深证成指', {}).get('上涨', 0)
+    sz_down = index_dict.get('深证成指', {}).get('下跌', 0)
+    
+    total_up = sh_up + sz_up
+    total_down = sh_down + sz_down
     
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print(f"\n{'='*40}")
@@ -93,8 +95,7 @@ if __name__ == '__main__':
     for name, data in index_dict.items():
         print(f"{name}: {data['现价']:.2f}，涨跌幅 {data['涨跌幅']:+.2f}%，成交额 {data['成交额(亿)']:.2f}亿")
     print(f"上证20日均线: {ma20}")
-    if up_count is not None and down_count is not None:
-        print(f"两市上涨家数: {up_count}，下跌家数: {down_count}")
+    print(f"两市上涨家数(沪+深): {total_up}，下跌家数: {total_down}")
     print(f"{'='*40}")
     
     filename = get_output_path(f"index_data_{datetime.now().strftime('%Y%m%d')}.txt")
@@ -103,6 +104,5 @@ if __name__ == '__main__':
         for name, data in index_dict.items():
             f.write(f"{name}: {data['现价']:.2f}，涨跌幅 {data['涨跌幅']:+.2f}%，成交额 {data['成交额(亿)']:.2f}亿\n")
         f.write(f"上证20日均线: {ma20}\n")
-        if up_count is not None and down_count is not None:
-            f.write(f"两市上涨家数: {up_count}，下跌家数: {down_count}\n")
+        f.write(f"两市上涨家数: {total_up}，下跌家数: {total_down}\n")
     print(f"数据已保存到 {filename}")

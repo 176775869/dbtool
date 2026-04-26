@@ -17,6 +17,7 @@ files = [
     (f'limit_up_data_{date_str}.txt', '涨停板数据'),
     (f'zhaban_data_{date_str}.txt', '炸板数据'),
     (f'limit_down_data_{date_str}.txt', '跌停板数据'),
+    (f'qs_pool_data_{date_str}.txt', '强势股池'),          # 新增
     (f'sector_data_{date_str}.txt', '板块数据'),
     (f'sector_ma_data_{date_str}.txt', '板块均线'),
     (f'sector_limit_up_{date_str}.txt', '板块涨停统计'),

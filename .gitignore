@@ -1,9 +1,21 @@
-# file 不需要提交的文件
+# Excel临时文件
 Table.xls
 Table1.xls
-strategy_*.md
 rt/复盘图表.xlsx
+
+# 策略输出
+strategy_*.md
+
+# Python目录下的临时文件
 py/*.txt
-py/*.json
 py/*.csv
-py/*.md
+py/limit_up_raw_*.json
+py/zhaban_raw_*.json
+py/last_strategy_date.txt
+
+# 但保留核心配置与锚点
+!py/config.json
+!py/global_anchor.json
+!py/candidate_scores.json
+!py/history.json
+!py/price_history.csv
