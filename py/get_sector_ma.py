@@ -1,6 +1,5 @@
 # coding=utf-8
-"""获取热门板块的均线数据（稳定版）"""
-import sys, io
+"""获取热门板块的均线数据（修复版）"""
 import requests
 import json
 import time
@@ -24,61 +23,31 @@ def fetch_json(url):
                 s = text.index('(') + 1
                 e = text.rindex(')')
                 text = text[s:e]
-            data = json.loads(text)
-            return data
+            return json.loads(text)
         except Exception as e:
             print(f"  请求失败，重试 {attempt+1}: {str(e)[:80]}")
             time.sleep(2)
     return None
 
 def auto_discover_sectors(date_str):
-    # 获取所有板块代码
+    """获取涨幅前5的概念板块"""
     url = (
         "https://push2.eastmoney.com/api/qt/clist/get?"
-        "fid=f3&fs=m:90+t:2,m:90+t:3&pn=1&pz=10000&po=1&np=1&"
-        "ut=bd1d9ddb04089700cf9c27f6f7426281&fields=f12,f14"
+        "cb=cb&fid=f62&po=1&pz=5&pn=1&np=1&fltt=2&invt=2"
+        "&ut=8dec03ba335b81bf4ebdf7b29ec27d15"
+        "&fs=m:90+t:3"
+        "&fields=f12,f14"
     )
     data = fetch_json(url)
     if not data or 'data' not in data or not data['data'].get('diff'):
         return []
 
-    all_items = data['data']['diff']
-    # 取当日涨幅前5的概念板块
-    concept_url = (
-        "https://push2.eastmoney.com/api/qt/clist/get?"
-        "fid=f3&fs=m:90+t:3&pn=1&pz=5&po=1&np=1&"
-        "ut=bd1d9ddb04089700cf9c27f6f7426281&fields=f12,f14"
-    )
-    top5_data = fetch_json(concept_url)
     codes = []
-    seen = set()
-    if top5_data and 'data' in top5_data and top5_data['data'].get('diff'):
-        for item in top5_data['data']['diff']:
-            code = item.get('f12', '')
-            name = item.get('f14', '')
-            if code and code not in seen:
-                codes.append((code, name))
-                seen.add(code)
-
-    # 补充关注列表中的板块（当前无历史则跳过）
-    history_file = get_output_path('history.json')
-    if os.path.exists(history_file):
-        try:
-            with open(history_file, 'r', encoding='utf-8') as f:
-                history = json.load(f)
-            watchlist = set()
-            cutoff = (datetime.now() - timedelta(days=7)).strftime('%Y%m%d')
-            for record in history:
-                if record['date'] >= cutoff:
-                    if record.get('top_concept'): watchlist.add(record['top_concept'])
-                    if record.get('top_industry'): watchlist.add(record['top_industry'])
-            for item in all_items:
-                if item.get('f14') in watchlist and item.get('f12') not in seen:
-                    codes.append((item['f12'], item['f14']))
-                    seen.add(item['f12'])
-        except:
-            pass
-
+    for item in data['data']['diff']:
+        code = item.get('f12', '')
+        name = item.get('f14', '')
+        if code:
+            codes.append((code, name))
     return codes
 
 def get_sector_ma(code, name):

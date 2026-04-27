@@ -9,6 +9,7 @@ strategy_*.md
 # Python目录下的临时文件
 py/*.txt
 py/*.csv
+py/*.json
 py/limit_up_raw_*.json
 py/zhaban_raw_*.json
 py/last_strategy_date.txt
@@ -17,5 +18,3 @@ py/last_strategy_date.txt
 !py/config.json
 !py/global_anchor.json
 !py/candidate_scores.json
-!py/history.json
-!py/price_history.csv
