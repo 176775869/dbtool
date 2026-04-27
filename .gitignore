@@ -6,16 +6,27 @@ rt/复盘图表.xlsx
 # 策略输出
 strategy_*.md
 
-# Python目录下的临时文件
-py/*.txt
-py/*.csv
-py/*.json
-py/limit_up_raw_*.json
-py/zhaban_raw_*.json
-py/last_strategy_date.txt
+# Python缓存
+__pycache__/
 py/__pycache__/
+py/core/__pycache__/
 
-# 但保留核心配置与锚点
-!py/config.json
-!py/global_anchor.json
-!py/candidate_scores.json
+# 采集器临时数据
+py/collectors/*.txt
+py/collectors/*.csv
+py/collectors/*.json
+
+# 数据目录临时文件
+py/data/*.txt
+py/data/*.csv
+py/data/*.json
+
+# 旧版遗留（保留兼容）
+py/last_strategy_date.txt
+
+# ===== 保留核心配置与锚点 =====
+!py/config/config.json
+!py/config/global_anchor.json
+!py/config/candidate_scores.json
+!py/config/history.json
+!py/config/price_history.csv
