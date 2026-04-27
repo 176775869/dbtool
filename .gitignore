@@ -30,3 +30,6 @@ py/last_strategy_date.txt
 !py/config/candidate_scores.json
 !py/config/history.json
 !py/config/price_history.csv
+
+py/history.json
+py/price_history.csv
