@@ -1,0 +1,46 @@
+{
+  "t_day": "20260427",
+  "main_line": {
+    "name": "半导体/芯片产业链",
+    "stage": "C",
+    "last_score": 4.5
+  },
+  "history": [
+    {
+      "date": "20260408",
+      "main_line": "算力/CPO",
+      "stage": "C",
+      "score": 4.3
+    },
+    {
+      "date": "20260413",
+      "main_line": "算力/CPO",
+      "stage": "2G-1",
+      "score": 4.5
+    },
+    {
+      "date": "20260421",
+      "main_line": "算力/CPO",
+      "stage": "2D-1",
+      "score": 3.2
+    },
+    {
+      "date": "20260422",
+      "main_line": "算力/CPO",
+      "stage": "3G-1",
+      "score": 4.1
+    },
+    {
+      "date": "20260423",
+      "main_line": "算力/CPO",
+      "stage": "3G-2",
+      "score": 3.35
+    },
+    {
+      "date": "20260427",
+      "main_line": "半导体/芯片产业链",
+      "stage": "C",
+      "score": 4.5
+    }
+  ]
+}

@@ -13,6 +13,7 @@ py/*.json
 py/limit_up_raw_*.json
 py/zhaban_raw_*.json
 py/last_strategy_date.txt
+py/__pycache__/
 
 # 但保留核心配置与锚点
 !py/config.json
