@@ -1,0 +1,52 @@
+[
+  {
+    "date": "20260428",
+    "primary_anchor": {
+      "name": "算力/CPO",
+      "stage": "E",
+      "score": 1.5,
+      "mid_cap": [
+        "工业富联",
+        "中际旭创"
+      ],
+      "pioneer": null
+    },
+    "challenger_anchor": {
+      "name": "半导体/芯片产业链",
+      "stage": "C",
+      "score": 2.1,
+      "mid_cap": [
+        "立讯精密",
+        "北方华创"
+      ],
+      "pioneer": "众合科技"
+    },
+    "market_environment": "B",
+    "key_signal": ""
+  },
+  {
+    "date": "20260427",
+    "primary_anchor": {
+      "name": "算力/CPO",
+      "stage": "E",
+      "score": 1.5,
+      "mid_cap": [
+        "工业富联",
+        "中际旭创"
+      ],
+      "pioneer": null
+    },
+    "challenger_anchor": {
+      "name": "半导体/芯片产业链",
+      "stage": "C",
+      "score": 2.7,
+      "mid_cap": [
+        "立讯精密",
+        "北方华创"
+      ],
+      "pioneer": "众合科技"
+    },
+    "market_environment": "A",
+    "key_signal": ""
+  }
+]

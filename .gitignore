@@ -21,15 +21,16 @@ py/data/*.txt
 py/data/*.csv
 py/data/*.json
 
-# 旧版遗留（保留兼容）
-py/last_strategy_date.txt
-
-# ===== 保留核心配置与锚点 =====
-!py/config/config.json
-!py/config/global_anchor.json
-!py/config/candidate_scores.json
-!py/config/history.json
-!py/config/price_history.csv
-
+# 自动生成的配置/数据文件
+py/config/candidate_scores.json
+py/config/history.json
+py/config/price_history.csv
 py/history.json
 py/price_history.csv
+
+# 旧版遗留
+py/last_strategy_date.txt
+
+# ===== 仅保留核心配置与锚点 =====
+!py/config/config.json
+!py/config/global_anchor.json
