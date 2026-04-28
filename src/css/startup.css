@@ -75,7 +75,7 @@ footer {	margin-top:50px;
     position: fixed;
 	display: none;
     background: rgba(0, 0, 0, 0.7)
-		url("../img/loading.gif") center
+		url("../../img/loading.gif") center
         no-repeat;
     z-index: 1;
 }
