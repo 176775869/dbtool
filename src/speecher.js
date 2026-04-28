@@ -41,9 +41,6 @@ var speecher = (function() {
 	};
 	
 	var init = function() {
-		var txt = Configure.apothegms[Math.round(Math.random() * Configure.apothegms.length)];
-		speeckerEL.innerHTML = txt ? txt : Configure.apothegms[0];
-		
 		textContainer = LocalStore.get(storeId);
 		if(textContainer &&  textContainer.length >0) {
 			var today = new Date();
