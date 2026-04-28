@@ -20,7 +20,7 @@ def fetch_concept_sectors():
         "cb=cb&fid=f62&po=1&pz=10000&pn=1&np=1&fltt=2&invt=2"
         "&ut=8dec03ba335b81bf4ebdf7b29ec27d15"
         "&fs=m:90+t:3"
-        "&fields=f12,f14,f2,f3,f4,f6,f62,f128,f184,f66,f69,f72,f75,f78,f81,f84,f87"
+        "&fields=f12,f14,f2,f3,f4,f6,f62,f128"
     )
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -101,11 +101,12 @@ if __name__ == '__main__':
 
         # ---- 行业板块 ----
         f.write("\n=== 行业板块涨幅前15 ===\n")
-        industry_sorted = sorted(industry_list, key=lambda x: x.get('f3', 0), reverse=True)
+        industry_sorted = sorted(industry_list, key=lambda x: float(x.get('f3', 0)), reverse=True)
         for item in industry_sorted[:15]:
             name = item.get('f14', '')
-            change = item.get('f3', 0)
-            amount = item.get('f6', 0) / 1e8 if item.get('f6') else 0
+            change = float(item.get('f3', 0))
+            # 修复：强制转换为 float
+            amount = float(item.get('f6', 0)) / 1e8 if item.get('f6', '') != '' else 0
             leader = item.get('f128', '')
             up_count = item.get('f104', '?')
             down_count = item.get('f105', '?')
@@ -113,11 +114,12 @@ if __name__ == '__main__':
 
         # ---- 概念板块 ----
         f.write("\n=== 概念板块涨幅前20 ===\n")
-        concept_sorted = sorted(concept_list, key=lambda x: x.get('f3', 0), reverse=True)
+        concept_sorted = sorted(concept_list, key=lambda x: float(x.get('f3', 0)), reverse=True)
         for item in concept_sorted[:20]:
             name = item.get('f14', '')
-            change = item.get('f3', 0)
-            amount = item.get('f6', 0) / 1e8 if item.get('f6') else 0
+            change = float(item.get('f3', 0))
+            # 修复：强制转换为 float
+            amount = float(item.get('f6', 0)) / 1e8 if item.get('f6', '') != '' else 0
             leader = item.get('f128', '')
             f.write(f"{name}: {change:+.2f}% 成交{amount:.1f}亿 领涨:{leader}\n")
 
@@ -125,4 +127,6 @@ if __name__ == '__main__':
     if concept_sorted:
         print("\n前5个概念板块预览:")
         for item in concept_sorted[:5]:
-            print(f"  {item.get('f14','')}: {item.get('f3',0):+.2f}%")
+            name = item.get('f14', '')
+            change = float(item.get('f3', 0))
+            print(f"  {name}: {change:+.2f}%")

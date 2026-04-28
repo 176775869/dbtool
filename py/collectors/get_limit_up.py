@@ -1,8 +1,7 @@
 # coding=utf-8
 """
-涨停板完整数据（最终版）
+涨停板完整数据（修复反爬版）
 接口: getTopicZTPool, 域名 push2ex.eastmoney.com
-新增封单额展示（字段 fund）
 """
 import requests
 import json
@@ -41,7 +40,8 @@ def fetch_all(date_str):
         )
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Referer': 'https://quote.eastmoney.com/ztb/detail'
+            # 【核心修复】将 Referer 从 https 改为 http，与浏览器真实访问行为一致
+            'Referer': 'http://quote.eastmoney.com/ztb/detail'
         }
         print(f"请求涨停第{page+1}页...")
         try:
@@ -81,7 +81,6 @@ if __name__ == '__main__':
 
     zt = []
     for item in raw:
-        # 封单额字段为 fund（单位：元），转换为亿元
         try:
             seal_amt = float(item.get('fund', 0)) / 1e8
         except:
@@ -100,13 +99,11 @@ if __name__ == '__main__':
             'hs': float(item.get('hs',0))
         })
 
-    # 新股标记
     normal_stocks = [z for z in zt if not (z['name'].startswith('N') or z['name'].startswith('C'))]
     new_stocks = [z for z in zt if (z['name'].startswith('N') or z['name'].startswith('C'))]
     normal_stocks.sort(key=lambda x: x['limit'], reverse=True)
     zt = normal_stocks + new_stocks
 
-    # 板块涨停统计
     sector_counter = Counter()
     for z in zt:
         sector = z.get('hbk', '')
@@ -118,7 +115,7 @@ if __name__ == '__main__':
         f.write(f"日期: {date_str}\n板块涨停家数统计\n\n")
         for sector, count in sector_counter.most_common():
             f.write(f"{sector}: {count}只涨停\n")
-    print(f"✅ 板块涨停统计已保存")
+    print(f"[OK] 板块涨停统计已保存")
 
     total = len(zt)
     max_lt = max(z['limit'] for z in normal_stocks) if normal_stocks else 0
@@ -135,6 +132,6 @@ if __name__ == '__main__':
             seal_str = f"{z['seal_amt']:.2f}亿" if z['seal_amt'] > 0 else '--'
             f.write(f"{i:<4}{z['name']:<10}{z['code']:<8}{z['pct']:>6.1f}%{z['limit']:>3}板{z['zttj']:<10}{z['fbt']:<10}{z['lbt']:<10}{z['hs']:>6.2f}%{z['amt']:>8.2f}亿  {seal_str}\n")
 
-    print(f"✅ 涨停数据已保存, 共{total}只, 最高{max_lt}连板")
+    print(f"[OK] 涨停数据已保存, 共{total}只, 最高{max_lt}连板")
     for s in top:
         print(f"  {s['name']} {s['limit']}连板 {s['zttj']} 首封{s['fbt']}")
