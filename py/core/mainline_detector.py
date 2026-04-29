@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-主线检测 v10.2：连续确认 + 日期锁防重复递推 + 评分修正
+主线检测 v10.2：市场周期识别 + 候选池机制 + 动态节奏模型 + 评分修复
 """
 import os, json
 from datetime import datetime, timedelta
@@ -65,38 +65,45 @@ def is_in_decline_window(c_day, old_main_e_day):
 def calc_full_score(direction_name, data):
     cfg = load_config()
     policy_hints = cfg.get('policy_hints', {})
+    cluster_kw = cfg.get('cluster_keywords', {})
     concepts = data.get('concepts', [])
     limit_stocks = data.get('limit_stocks', [])
+    kw_list = cluster_kw.get(direction_name, [direction_name])
 
-    # 直接从概念板块涨幅第一和涨停板块统计中找最强方向
-    # 1. 找到该方向相关的概念板块（用板块名称中的关键词模糊匹配）
-    cluster_pct = 0
-    cluster_amt = 0
-    total_limit = 0
+    # 政策
+    policy = 3
+    for k, v in policy_hints.items():
+        if k in direction_name:
+            policy = v
+            break
+
+    # 资金（集群涨幅均值，放宽过滤：pct < 1000）
+    cps = []
     for c in concepts:
-        if direction_name in c['name'] or any(kw in c['name'] for kw in direction_name.split('/')):
-            cluster_pct += c['pct']
-            cluster_amt += c.get('amount', 0)
-    for sn, cnt in data.get('limit_by_sector', {}).items():
-        if any(kw in sn for kw in direction_name.split('/')):
-            total_limit += cnt
+        if any(kw in c['name'] for kw in kw_list) or any(kw in c.get('leader', '') for kw in kw_list):
+            pct = c.get('pct', 0)
+            if 0 < pct < 1000:
+                cps.append(pct)
+    avg = sum(cps) / len(cps) if cps else 0
+    money = 5 if avg > 5 else (3 if avg > 2 else 1)
 
-    # 2. 从Top20中找该方向的中军，计算平均涨幅
-    top20 = data.get('top20', [])
-    mid_pcts = []
-    for obj in top20:
-        if any(kw in obj['name'] for kw in direction_name.split('/')):
-            mid_pcts.append(obj['pct'])
-    avg_mid = sum(mid_pcts) / len(mid_pcts) if mid_pcts else 0
+    # 涨停数
+    total = sum(cnt for sn, cnt in data.get('limit_by_sector', {}).items() if any(kw in sn for kw in kw_list))
+    limit_score = 5 if total >= 15 else (4 if total >= 10 else (3 if total >= 5 else 1))
 
-    # 各项打分
-    policy = 4 if cluster_amt > 1000 else (3 if cluster_amt > 500 else 2)
-    money_score = 5 if cluster_pct > 5 else (3 if cluster_pct > 2 else 1)
-    limit_score = 5 if total_limit >= 15 else (4 if total_limit >= 10 else (3 if total_limit >= 5 else 1))
-    mid_score = 5 if avg_mid >= 7 else (3 if avg_mid >= 3 else 2)
+    # 封单（取方向相关涨停股的最大封单额）
+    max_seal = 0
+    for st in limit_stocks:
+        if any(kw in st['name'] for kw in kw_list):
+            if st.get('seal_amount', 0) > max_seal:
+                max_seal = st['seal_amount']
+    seal_score = 5 if max_seal > 5 else (3 if max_seal > 2 else 1)
 
-    total = round(policy * 0.2 + money_score * 0.3 + limit_score * 0.2 + 3 * 0.15 + mid_score * 0.15, 2)
-    return total
+    # 中军表现（role_identifier 负责，这里给中等底分）
+    mid_score = 3
+
+    total_score = round(policy * 0.2 + money * 0.3 + limit_score * 0.2 + seal_score * 0.15 + mid_score * 0.15, 2)
+    return total_score
 
 def calc_capacity(direction_name, data):
     cluster_kw = load_config().get('cluster_keywords', {})
@@ -159,7 +166,6 @@ def detect_c_day_candidates(concepts, data):
 def update_candidate_pool(anchor, data):
     today = data['date']
     
-    # 【日期锁】今天已经更新过候选池，跳过递推
     if anchor.get('last_update_date') == today:
         return
     

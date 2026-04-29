@@ -16,8 +16,8 @@ from mainline_detector import (
     load_json, save_json, determine_main_lines, GLOBAL_ANCHOR_FILE
 )
 from strategy_writer import generate_strategy
-# from ai_engine import call_deepseek  # 暂时禁用AI，等编码问题解决后再开启
-call_deepseek = None  # 强制降级到本地引擎
+from ai_engine import call_deepseek  # 暂时禁用AI，等编码问题解决后再开启
+#call_deepseek = None  # 强制降级到本地引擎
 
 
 DATA_DIR = os.path.join(SCRIPT_DIR, '..', 'data')

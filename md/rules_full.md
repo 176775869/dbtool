@@ -1,3 +1,34 @@
+# 输出格式（最高优先级，不可违背）
+
+你必须**只返回**下方格式的JSON，不得添加任何解释、markdown标记或额外文本。
+
+{
+    "market_phase": "decline/sideways/uptrend/retreat",
+    "rhythm": [0,2,4,6,8] 或 [0,2,4,9,11] 或 null,
+    "primary_anchor": {"name": "算力/CPO", "stage": "E", "score": 1.5},
+    "candidate_pool": [
+        {
+            "name": "新能源/锂电",
+            "type": "启动共振或企稳共振或普通候选",
+            "t_day": "20260427",
+            "stage": "2G-2",
+            "score": 4.5,
+            "capacity": 0.35,
+            "mid_cap": ["宁德时代", "北方稀土"],
+            "lianban_pioneer": "江特电机",
+            "elastic_pioneer": "鹏辉能源",
+            "trend_pioneer": "天华新能",
+            "buy_signal": "D2/D3/HOLD/None",
+            "buy_targets": ["江特电机(002176)"],
+            "buy_condition": "竞价高开3-7%+放量>30%"
+        }
+    ],
+    "holdings_advice": "空仓/持有/减仓/清仓",
+    "next_day_plan": "一句话操作建议"
+}
+
+如果不满足以上格式，视为错误输出。
+
 # 豆包模式全自动交易系统 · AI 规则手册（v13.0 最终合并版）
 
 ## 一、系统核心思想
