@@ -52,6 +52,6 @@ class ReplayHandler(SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    print(f"服务器启动: http://{HOST}:{PORT}/tool.html")
-    print(f"API 地址: http://{HOST}:{PORT}/api/generate (POST)")
-    HTTPServer((HOST, PORT), ReplayHandler).serve_forever()
+    print(f"服务器启动: http://0.0.0.0:8080/tool.html")
+    print(f"API 地址: http://0.0.0.0:8080/api/generate (POST)")
+    HTTPServer(('0.0.0.0', 8080), ReplayHandler).serve_forever()
