@@ -14,6 +14,7 @@
 	<script type="text/javascript"  src="src/base/timer.js"></script>
 	<link rel="stylesheet"  type="text/css" href="src/css/startup.css" />
     <link rel="stylesheet" type="text/css" href="src/doubao/strategy.css" />
+    <link rel="stylesheet" type="text/css" href="src/doubao/chat.css">
 </head>
 <body>
 	<div class="loader-container">
@@ -72,6 +73,22 @@
 		</tbody>
 	</table>
 	<a id="load-all-btn" hidden href="javascript:;" >>>></a>
+    
+    <!-- 豆包 AI 聊天面板（结构） -->
+    <button id="chat-toggle-btn" onclick="openChat()">💬</button>
+
+    <div id="ai-chat-panel">
+        <div id="chat-header">
+            <span>🤖 豆包 AI 助手</span>
+            <button onclick="closeChat()" style="background:none; border:none; color:white; font-size:18px; cursor:pointer; padding:0 5px;">×</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+            <textarea id="chat-input" placeholder="输入消息，支持长文本粘贴..."></textarea>
+            <button id="chat-send-btn" onclick="sendChatMessage()">发送</button>
+        </div>
+        <div id="resize-handle"></div>
+    </div>
 	
 	<footer> 
 		<a id="cailianshe" href="https://www.cls.cn/telegraph" target='_blank'>盘中电报 </a>&nbsp; 
@@ -100,6 +117,7 @@
 	<script src="src/rt/rtSpirit.js"> </script>
 	<script src="src/AI.js"> </script>
     <script src="src/doubao/strategy.js"></script>
+    <script src="src/doubao/chat.js"></script>
 	<!-- start up -->
 	<script src="src/startup.js"> </script>
 </body>
