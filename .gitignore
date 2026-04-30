@@ -34,4 +34,8 @@ py/last_strategy_date.txt
 
 # ===== 仅保留核心配置与锚点 =====
 !py/config/config.json
-!py/config/global_anchor.json
+!py/config/global_anchor.jsontest_output.md
+*.patch
+py/core/debug_chat.py
+
+test_output.md
