@@ -122,28 +122,53 @@ class ReplayHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 self.send_json(500, {'error': str(e)})
             return
-        # ==================== 策略生成 API（保留） ====================
+
+        # ==================== 策略生成/读取 API ====================
         if self.path == '/api/generate':
-            try:
-                print(f"[API] 开始生成策略...")
-                subprocess.run(['python', 'py/collectors/merge_replay.py'], cwd=os.path.dirname(os.path.abspath(__file__)), capture_output=True)
-                result = subprocess.run(['python', 'py/core/generate_strategy.py'], cwd=os.path.dirname(os.path.abspath(__file__)), capture_output=True, text=True)
-                
-                if result.returncode != 0:
-                    self.send_json(500, {'error': result.stderr.strip()})
+            force = data.get('force', False)  # 是否强制重新生成
+            
+            # 1. 如果不强制，先尝试返回已有的最新策略文件
+            if not force:
+                strategy_files = glob.glob('strategy_*.md')
+                if strategy_files:
+                    latest = max(strategy_files, key=os.path.getctime)
+                    with open(latest, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    print(f"[API] 返回已有策略: {latest}")
+                    self.send_json(200, {'file': latest, 'content': content, 'cached': True})
                     return
 
+            # 2. 需要生成新策略
+            try:
+                print("[API] 开始生成策略...")
+                # 合并数据
+                subprocess.run(['python', 'py/collectors/merge_replay.py'], 
+                               cwd=os.path.dirname(os.path.abspath(__file__)), 
+                               capture_output=True, encoding='utf-8')
+                # 调用 generate_strategy.py
+                result = subprocess.run(['python', 'py/core/generate_strategy.py'], 
+                                        cwd=os.path.dirname(os.path.abspath(__file__)), 
+                                        capture_output=True, encoding='utf-8')
+                
+                if result.returncode != 0:
+                    error_msg = result.stderr.strip() if result.stderr else "未知错误"
+                    print(f"[API] 生成失败: {error_msg}")
+                    self.send_json(500, {'error': error_msg})
+                    return
+
+                # 查找最新生成的策略文件
                 strategy_files = glob.glob('strategy_*.md')
                 if not strategy_files:
-                    self.send_json(500, {'error': '未找到生成的策略文件'})
+                    self.send_json(500, {'error': '生成完成但未找到策略文件'})
                     return
                 latest = max(strategy_files, key=os.path.getctime)
                 with open(latest, 'r', encoding='utf-8') as f:
                     content = f.read()
 
                 print(f"[API] 策略生成成功: {latest}")
-                self.send_json(200, {'file': latest, 'content': content})
+                self.send_json(200, {'file': latest, 'content': content, 'cached': False})
             except Exception as e:
+                print(f"[API] 生成异常: {str(e)}")
                 self.send_json(500, {'error': str(e)})
             return
 

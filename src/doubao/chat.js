@@ -1,149 +1,138 @@
 /**
  * 豆包 AI 聊天面板
- * 依赖：无
+ * 默认关闭，点击浮动按钮打开
  */
-(function() {
-    let chatHistory = [];
+var chatVisible = false;
 
-    // ============ 打开面板 ============
-    window.openChat = function() {
-        document.getElementById('ai-chat-panel').style.display = 'flex';
-        document.getElementById('chat-toggle-btn').style.display = 'none';
-    };
+function openChat() {
+    document.getElementById('ai-chat-panel').style.display = 'flex';
+    document.getElementById('chat-toggle-btn').style.display = 'none';
+    chatVisible = true;
+}
 
-    // ============ 关闭面板（保留记录） ============
-    window.closeChat = function() {
-        document.getElementById('ai-chat-panel').style.display = 'none';
-        document.getElementById('chat-toggle-btn').style.display = 'block';
-    };
+function closeChat() {
+    document.getElementById('ai-chat-panel').style.display = 'none';
+    document.getElementById('chat-toggle-btn').style.display = 'flex';
+    chatVisible = false;
+}
 
-    // ============ 发送消息 ============
-    window.sendChatMessage = async function() {
-        const input = document.getElementById('chat-input');
-        const msgText = input.value.trim();
-        if (!msgText) return;
-
-        appendMessage('user', msgText);
-        chatHistory.push({role: 'user', content: msgText});
-        input.value = '';
-
-        appendMessage('assistant', '思考中...');
-
-        try {
-            const recentHistory = chatHistory.slice(-5, -1);
-            const resp = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({message: msgText, history: recentHistory})
-            });
-            const data = await resp.json();
-
-            const container = document.getElementById('chat-messages');
-            const lastMsg = container.lastChild;
-            const reply = data.reply || data.error || '未知错误';
-            lastMsg.innerHTML = '<strong style="color:#e67e22;">AI：</strong>' + escapeHtml(reply);
-            
-            if (data.reply) {
-                chatHistory.push({role: 'assistant', content: data.reply});
-            }
-        } catch (e) {
-            const container = document.getElementById('chat-messages');
-            const lastMsg = container.lastChild;
-            lastMsg.innerHTML = '<strong style="color:#e67e22;">AI：</strong>请求失败：' + escapeHtml(e.message);
-        }
-    };
-
-    function appendMessage(role, text) {
-        const container = document.getElementById('chat-messages');
-        const div = document.createElement('div');
-        div.style.marginBottom = '8px';
-        if (role === 'user') {
-            div.innerHTML = '<strong style="color:#4a90d8;">你：</strong>' + escapeHtml(text);
-        } else {
-            div.innerHTML = '<strong style="color:#e67e22;">AI：</strong>' + text;
-        }
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
+function toggleChat() {
+    if (chatVisible) {
+        closeChat();
+    } else {
+        openChat();
     }
+}
 
-    function escapeHtml(str) {
-        const temp = document.createElement('div');
-        temp.textContent = str;
-        return temp.innerHTML;
-    }
+function sendChatMessage() {
+    var input = document.getElementById('chat-input');
+    var messagesDiv = document.getElementById('chat-messages');
+    var message = input.value.trim();
 
-    // ============ 拖拽移动（标题栏拖动整个面板） ============
-    function initDrag() {
-        const header = document.getElementById('chat-header');
-        const panel = document.getElementById('ai-chat-panel');
-        let isDragging = false, offsetX, offsetY;
+    if (!message) return;
 
-        header.addEventListener('mousedown', function(e) {
-            if (e.target.tagName === 'BUTTON') return;
-            isDragging = true;
-            const rect = panel.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
-            panel.style.transition = 'none';
-            document.body.style.userSelect = 'none';
-        });
+    // 显示用户消息
+    var userDiv = document.createElement('div');
+    userDiv.className = 'chat-message user-message';
+    userDiv.textContent = message;
+    messagesDiv.appendChild(userDiv);
 
-        document.addEventListener('mousemove', function(e) {
-            if (!isDragging) return;
-            panel.style.left = (e.clientX - offsetX) + 'px';
-            panel.style.top = (e.clientY - offsetY) + 'px';
-            panel.style.right = 'auto';
-            panel.style.bottom = 'auto';
-        });
+    input.value = '';
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-        document.addEventListener('mouseup', function() {
-            if (isDragging) {
-                isDragging = false;
-                document.body.style.userSelect = '';
+    // 显示加载中
+    var loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-message ai-message';
+    loadingDiv.textContent = '思考中...';
+    loadingDiv.id = 'loading-message';
+    messagesDiv.appendChild(loadingDiv);
+
+    // 获取历史消息
+    var history = [];
+    var allMessages = messagesDiv.querySelectorAll('.chat-message');
+    allMessages.forEach(function(msg) {
+        if (msg.id !== 'loading-message') {
+            var role = msg.classList.contains('user-message') ? 'user' : 'assistant';
+            history.push({ role: role, content: msg.textContent });
+        }
+    });
+
+    // 调用 API
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message, history: history.slice(-6) })
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+        // 移除加载提示
+        var loading = document.getElementById('loading-message');
+        if (loading) loading.remove();
+
+        // 显示 AI 回复
+        var aiDiv = document.createElement('div');
+        aiDiv.className = 'chat-message ai-message';
+        aiDiv.textContent = data.reply || data.error || '无响应';
+        messagesDiv.appendChild(aiDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    })
+    .catch(function(err) {
+        var loading = document.getElementById('loading-message');
+        if (loading) loading.remove();
+        var errDiv = document.createElement('div');
+        errDiv.className = 'chat-message ai-message';
+        errDiv.textContent = '请求失败: ' + err.message;
+        messagesDiv.appendChild(errDiv);
+    });
+}
+
+// 回车发送
+document.addEventListener('DOMContentLoaded', function() {
+    var chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
             }
         });
     }
 
-    // ============ 拖拽缩放 ============
-    function initResize() {
-        const handle = document.getElementById('resize-handle');
-        const panel = document.getElementById('ai-chat-panel');
-        let isResizing = false, startX, startY, startWidth, startHeight;
+    // 初始化拖拽调整大小
+    var panel = document.getElementById('ai-chat-panel');
+    var resizeHandle = document.getElementById('resize-handle');
+    if (panel && resizeHandle) {
+        var isResizing = false;
+        var startX, startY, startWidth, startHeight;
 
-        handle.addEventListener('mousedown', function(e) {
+        resizeHandle.addEventListener('mousedown', function(e) {
             isResizing = true;
             startX = e.clientX;
             startY = e.clientY;
             startWidth = panel.offsetWidth;
             startHeight = panel.offsetHeight;
             e.preventDefault();
-            e.stopPropagation();
-            document.body.style.userSelect = 'none';
         });
 
         document.addEventListener('mousemove', function(e) {
             if (!isResizing) return;
-            panel.style.width = Math.max(300, startWidth + (e.clientX - startX)) + 'px';
-            panel.style.height = Math.max(250, startHeight + (e.clientY - startY)) + 'px';
+            var newWidth = Math.max(300, Math.min(800, startWidth - (e.clientX - startX)));
+            var newHeight = Math.max(200, Math.min(700, startHeight + (e.clientY - startY)));
+            panel.style.width = newWidth + 'px';
+            panel.style.height = newHeight + 'px';
         });
 
         document.addEventListener('mouseup', function() {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.userSelect = '';
-            }
+            isResizing = false;
         });
     }
 
-    // 初始化拖拽和缩放
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            initDrag();
-            initResize();
-        });
-    } else {
-        initDrag();
-        initResize();
+    // 默认关闭聊天面板
+    var chatPanel = document.getElementById('ai-chat-panel');
+    var chatToggleBtn = document.getElementById('chat-toggle-btn');
+    if (chatPanel && chatToggleBtn) {
+        chatPanel.style.display = 'none';
+        chatToggleBtn.style.display = 'flex';
+        chatVisible = false;
     }
-
-})();
+});

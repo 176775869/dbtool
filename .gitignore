@@ -36,6 +36,6 @@ py/last_strategy_date.txt
 !py/config/config.json
 !py/config/global_anchor.jsontest_output.md
 *.patch
-py/core/debug_chat.py
+py/feeds/
 
 test_output.md
