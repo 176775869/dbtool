@@ -1,67 +1,107 @@
-#doubao-panel {
+#doubao-workbench {
     position: fixed;
-    bottom: 80px;
+    top: 60px;
     right: 20px;
-    width: 500px;
-    max-height: 70vh;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+    width: 520px;
+    height: 500px;
+    min-width: 400px;
+    min-height: 300px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+    z-index: 10000;
+    display: flex;
     flex-direction: column;
     overflow: hidden;
-    z-index: 10000;
 }
-#doubao-header {
-    padding: 10px 16px;
-    background: #2c3e50;
-    color: white;
+#wb-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: move;
+    background: #2c3e50;
+    border-radius: 10px 10px 0 0;
+    flex-shrink: 0;
+}
+.wb-tabs { display: flex; }
+.wb-tab {
+    background: transparent;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    cursor: pointer;
     font-size: 14px;
 }
-.btn-close {
+.wb-tab.active { background: #1a252f; }
+.wb-close {
     background: none;
     border: none;
     color: white;
     font-size: 18px;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 0 12px;
 }
-#doubao-body {
-    padding: 12px;
-    overflow-y: auto;
+#wb-content {
     flex: 1;
-}
-.doubao-actions {
+    overflow: hidden;
     display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
+    flex-direction: column;
+}
+.wb-panel {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+.wb-panel.active { display: flex; flex-direction: column; }
+.doubao-actions {
+    margin-bottom: 10px;
+    flex-shrink: 0;
 }
 .btn-generate {
     padding: 6px 12px;
-    border: none;
-    border-radius: 6px;
     background: #2c3e50;
     color: white;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 13px;
-    white-space: nowrap;
-}
-.btn-generate:hover {
-    opacity: 0.85;
+    margin-right: 6px;
 }
 #doubao-status {
-    font-size: 12px;
+    font-size: 13px;
     color: #555;
     margin-bottom: 8px;
+    flex-shrink: 0;
 }
 #doubao-strategy {
+    flex: 1;
+    overflow-y: auto;
     background: #f8f9fa;
     padding: 12px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.6;
-    display: none;
+}
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 0;
+}
+#chat-input-area { display: flex; flex-shrink: 0; }
+#chat-input { flex: 1; padding: 8px; }
+#chat-send-btn { padding: 8px 15px; background: #2c3e50; color: white; border: none; }
+.chat-message { margin-bottom: 8px; }
+.chat-message.user { text-align: right; color: #2c3e50; }
+.chat-message.ai { text-align: left; color: #555; }
+#wb-resize-handle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 18px;
+    height: 18px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 50%, #bbb 50%);
+    border-radius: 0 0 10px 0;
 }

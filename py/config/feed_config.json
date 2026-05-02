@@ -1,0 +1,23 @@
+{
+  "replay": {
+    "prompt_intro": "请严格按照下面的模式规则对今日市场数据进行复盘，并生成隔日交易策略。复盘报告需包含全景表。",
+    "files": [
+      "md/豆包模式规则手册·投喂版.md",
+      "AUTO_LATEST:py/data/replay_full_*.txt",
+      "AUTO_LATEST:strategy_*.md"
+    ]
+  },
+  "monitor": {
+    "prompt_intro": "你是一个盘中实时监控助手。根据以下规则和昨日策略，判断当前是否触发买卖点。",
+    "files": [
+      "md/豆包模式规则手册·投喂版.md",
+      "AUTO_LATEST:strategy_*.md"
+    ]
+  },
+  "chat": {
+    "prompt_intro": "你是一个精通豆包模式交易系统的助手，请结合以下规则回答用户问题。",
+    "files": [
+      "md/豆包模式规则手册·投喂版.md"
+    ]
+  }
+}

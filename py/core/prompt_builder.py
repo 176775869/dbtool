@@ -1,117 +1,100 @@
 """
-prompt_builder.py - 拼装投喂给 DeepSeek 的完整 Prompt
-依赖：replay_full_*.txt, session_snapshot.json, rules_full.md, config.json (含cluster_keywords),
-      market_context.txt (可选)
-自动选择最新日期的数据文件。
+prompt_builder.py - 读取 feed_config.json，按场景拼接投喂内容
+支持通过 custom_prompt.txt 动态注入额外指令
 """
-import json
 import os
 import glob
+import json
 from datetime import datetime
 
-def load_text(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        return f.read()
+CONFIG_DIR = os.path.join(os.path.dirname(__file__), '..', 'config')
+CONFIG_PATH = os.path.join(CONFIG_DIR, 'feed_config.json')
+CUSTOM_PROMPT_PATH = os.path.join(CONFIG_DIR, 'custom_prompt.txt')
 
-def load_json(path):
-    with open(path, 'r', encoding='utf-8') as f:
+
+def load_config():
+    with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-def find_latest_replay(data_dir):
-    """返回最新一份 replay_full_*.txt 的路径和日期字符串"""
-    pattern = os.path.join(data_dir, 'replay_full_*.txt')
-    files = glob.glob(pattern)
-    if not files:
-        raise FileNotFoundError(f'未找到任何 replay_full_*.txt 文件于 {data_dir}')
-    files.sort()
-    latest = files[-1]
-    basename = os.path.basename(latest)
-    date_str = basename.split('_')[2][:8]
-    return latest, date_str
 
-def build_system_prompt(rules_path):
-    rules = load_text(rules_path)
-    system = (
-        "你是一个严格遵循豆包模式交易系统的首席策略分析师。\n"
-        "你精通题材周期、主线识别、双锚点机制和中军/先锋的定位。\n"
-        "你不依赖单一数据点，而是结合市场状态、产业背景和规则做出判断。\n\n"
-        "以下是豆包模式的全部规则，你必须严格遵守：\n\n"
-        f"{rules}\n\n"
-        "在分析数据时，请先输出包含全景表的可读复盘报告，再输出结构化JSON。"
-    )
-    return system
+def get_system_note():
+    """根据当前日期自动生成盘前提示（如节假日、非交易日说明）"""
+    today = datetime.now()
+    date_str = today.strftime('%Y年%m月%d日')
+    weekday = today.weekday()
+    
+    note = f"当前日期：{date_str}。"
+    if weekday in [5, 6]:
+        note += "今天是周末，市场休市。以下数据来自上一个交易日。"
+    elif today.month == 5 and today.day <= 3:
+        note += "今天是五一假期，市场休市。以下数据来自节前最后一个交易日（2026年4月30日）。"
+    else:
+        note += "今天是交易日。"
+    return note
 
-def build_user_content(replay_path, snapshot_path, config_path, context_path=None):
-    # 1. 市场数据
-    data_text = load_text(replay_path)
 
-    # 2. 快照
-    snapshot = load_json(snapshot_path)
-    snapshot_text = json.dumps(snapshot, ensure_ascii=False, indent=2)
+def load_custom_prompt():
+    """读取用户自定义的额外提示词（如果存在）"""
+    if os.path.exists(CUSTOM_PROMPT_PATH):
+        with open(CUSTOM_PROMPT_PATH, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+            if content:
+                return content
+    return None
 
-    # 3. 题材关键词
-    config = load_json(config_path)
-    keywords = config.get('cluster_keywords', {})
-    kw_text = json.dumps(keywords, ensure_ascii=False, indent=2)
 
-    # 4. 产业背景（可选，按日期匹配）
-    bg_text = ""
-    if context_path and os.path.exists(context_path):
-        bg_text = load_text(context_path)
-        bg_text = f"\n\n【产业背景】\n{bg_text}"
+def resolve_file(file_ref, base_dir):
+    """根据文件引用（支持 AUTO_LATEST 通配符）读取文件内容"""
+    if file_ref.startswith('AUTO_LATEST:'):
+        pattern = file_ref[len('AUTO_LATEST:'):]
+        full_pattern = os.path.join(base_dir, pattern)
+        files = glob.glob(full_pattern)
+        if not files:
+            raise FileNotFoundError(f'No files match {full_pattern}')
+        files.sort()
+        latest = files[-1]
+        with open(latest, 'r', encoding='utf-8') as f:
+            return f.read(), latest
+    else:
+        path = os.path.join(base_dir, file_ref)
+        if not os.path.exists(path):
+            raise FileNotFoundError(f'File not found: {path}')
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read(), path
 
-    user = (
-        f"## 今日市场数据\n\n{data_text}\n\n"
-        f"## 题材方向关键词映射\n\n{kw_text}\n\n"
-        f"## 上一交易日纵向市场快照\n\n{snapshot_text}\n"
-        f"{bg_text}\n\n"
-        "## 输出要求\n"
-        "1. 首先输出包含全景表的完整复盘报告（Markdown格式）。\n"
-        "2. 在报告末尾，输出一个完整的JSON对象，包含以下字段：\n"
-        "   market_phase (decline/sideways/uptrend/retreat),\n"
-        "   rhythm (数组或null),\n"
-        "   primary_anchor (对象),\n"
-        "   candidate_pool (数组),\n"
-        "   holdings_advice,\n"
-        "   next_day_plan (字符串)。\n"
-        "   JSON字段应与豆包模式输出格式一致。\n"
-        "3. JSON 输出前自检：rhythm 必须与 market_phase 严格对应：\n"
-        "   - uptrend → [0,2,4,9,11]\n"
-        "   - sideways → [0,2,4,6,8]\n"
-        "   - decline → null\n"
-        "   - retreat → null"
-    )
-    return user
 
-def main():
-    base = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(base, '..', 'data')
-    config_dir = os.path.join(base, '..', 'config')
+def build_prompt(scene='replay', extra_note=None):
+    """构建指定场景的完整投喂 Prompt。支持通过 extra_note 注入额外指令。"""
+    config = load_config()
+    if scene not in config:
+        raise ValueError(f'Unknown scene: {scene}')
+    
+    scene_config = config[scene]
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    
+    # 1. 场景基础 Prompt
+    prompt = scene_config['prompt_intro'] + '\n\n'
+    
+    # 2. 系统自动提示（如节假日说明）
+    system_note = get_system_note()
+    prompt += f"【系统提示】{system_note}\n\n"
+    
+    # 3. 前端传入的额外指令（优先级最高）
+    if extra_note:
+        prompt += f"【用户额外指令（必须严格执行）】{extra_note}\n\n"
+    else:
+        # 如果前端没传，再尝试读取 custom_prompt.txt 文件
+        custom_file_note = load_custom_prompt()
+        if custom_file_note:
+            prompt += f"【用户额外指令】{custom_file_note}\n\n"
+    
+    # 4. 拼接所有配置的文件内容
+    for file_ref in scene_config['files']:
+        content, resolved_path = resolve_file(file_ref, base_dir)
+        prompt += f"\n--- 文件：{os.path.basename(resolved_path)} ---\n{content}\n"
+    
+    return prompt
 
-    replay_path, date_str = find_latest_replay(data_dir)
-    print(f'[OK] Using date: {date_str}')
-    print(f'     Data source: {os.path.basename(replay_path)}')
-
-    snapshot_path = os.path.join(config_dir, 'session_snapshot.json')
-    config_path = os.path.join(config_dir, 'config.json')
-    context_path = os.path.join(data_dir, f'market_context_{date_str}.txt')
-    rules_path = os.path.join(base, '..', '..', 'md', 'rules_full.md')
-
-    for f, desc in [(snapshot_path, 'session_snapshot.json'), (rules_path, 'rules_full.md'), (config_path, 'config.json')]:
-        if not os.path.exists(f):
-            raise FileNotFoundError(f'缺少必要文件: {desc} ({f})')
-
-    system = build_system_prompt(rules_path)
-    user = build_user_content(replay_path, snapshot_path, config_path, context_path)
-
-    full_prompt = f"=== SYSTEM PROMPT ===\n{system}\n\n=== USER CONTENT ===\n{user}"
-
-    feed_dir = os.path.abspath(os.path.join(base, '..', 'feeds'))
-    os.makedirs(feed_dir, exist_ok=True)
-    feed_path = os.path.join(feed_dir, f'feed_{date_str}.txt')
-    with open(feed_path, 'w', encoding='utf-8') as f:
-        f.write(full_prompt)
-    print(f'[OK] Prompt saved to {feed_path}')
 
 if __name__ == '__main__':
-    main()
+    print(build_prompt('replay')[:500])
