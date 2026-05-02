@@ -39,3 +39,5 @@ py/last_strategy_date.txt
 py/feeds/
 
 test_output.md
+server.log
+py/config/custom_prompt.txt
