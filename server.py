@@ -36,7 +36,7 @@ def run_collectors():
 
 def preload_workbook():
     global WORKBOOK_DATA
-    # 保留原逻辑，此处省略
+    pass
 
 class ReplayHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -57,6 +57,7 @@ class ReplayHandler(SimpleHTTPRequestHandler):
         except:
             data = {}
 
+        # ==================== 采集 API ====================
         if self.path == '/api/collect':
             try:
                 run_collectors()
@@ -65,13 +66,62 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                 self.send_json(500, {'error': str(e)})
             return
 
+        # ==================== AI 聊天 API ====================
         if self.path == '/api/chat':
-            # ... 略，保持原有逻辑
-            pass
+            user_message = data.get('message', '').strip()
+            history = data.get('history', [])
 
+            if not user_message:
+                self.send_json(400, {'error': '消息不能为空'})
+                return
+
+            if not DEEPSEEK_API_KEY:
+                self.send_json(500, {'error': '服务器未配置 DEEPSEEK_API_KEY'})
+                return
+
+            try:
+                from prompt_builder import build_prompt
+                rules_prompt = build_prompt('chat')
+            except:
+                rules_prompt = "你是一个友好的 AI 助手。"
+
+            messages = [{'role': 'system', 'content': rules_prompt}]
+            for h in history[-6:]:
+                messages.append({'role': h.get('role', 'user'), 'content': h.get('content', '')})
+            messages.append({'role': 'user', 'content': user_message})
+
+            try:
+                resp = req.post(
+                    'https://api.deepseek.com/chat/completions',
+                    headers={
+                        'Authorization': f'Bearer {DEEPSEEK_API_KEY}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        'model': 'deepseek-chat',
+                        'messages': messages,
+                        'temperature': 0.7,
+                        'max_tokens': 2000
+                    },
+                    timeout=60
+                )
+                if resp.status_code != 200:
+                    self.send_json(500, {'error': f'API 返回错误: {resp.text[:200]}'})
+                    return
+
+                result = resp.json()
+                reply = result['choices'][0]['message']['content']
+                self.send_json(200, {'reply': reply})
+            except Exception as e:
+                logging.error(f"Chat error: {e}")
+                self.send_json(500, {'error': str(e)})
+            return
+
+        # ==================== 策略生成 API ====================
         if self.path == '/api/generate':
             force = data.get('force', False)
             custom_prompt = data.get('custom_prompt', None)
+
             if get_auto_collect() and not force:
                 replay_files = glob.glob('py/data/replay_full_*.txt')
                 if replay_files:
@@ -80,8 +130,10 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                     if mtime.date() != datetime.now().date():
                         logging.info('自动采集数据...')
                         run_collectors()
+
             if custom_prompt:
                 force = True
+
             if not force:
                 strategy_files = glob.glob('strategy_*.md')
                 if strategy_files:
@@ -90,6 +142,7 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                         content = f.read()
                     self.send_json(200, {'file': latest, 'content': content, 'cached': True})
                     return
+
             try:
                 subprocess.run(['python', 'py/collectors/merge_replay.py'],
                                cwd=os.path.dirname(os.path.abspath(__file__)),
@@ -116,6 +169,7 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                 self.send_json(500, {'error': str(e)})
             return
 
+        # ==================== 监控 API ====================
         if self.path == '/api/monitor':
             try:
                 if get_auto_collect():
