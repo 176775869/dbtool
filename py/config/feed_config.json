@@ -11,7 +11,8 @@
     "prompt_intro": "你是一个盘中实时监控助手。根据以下规则和昨日策略，判断当前是否触发买卖点。",
     "files": [
       "md/豆包模式规则手册·投喂版.md",
-      "AUTO_LATEST:strategy_*.md"
+      "AUTO_LATEST:strategy_*.md",
+      "_MONITOR_LIGHT_DATA_"
     ]
   },
   "chat": {
@@ -19,5 +20,6 @@
     "files": [
       "md/豆包模式规则手册·投喂版.md"
     ]
-  }
+  },
+  "auto_collect": false
 }

@@ -1,6 +1,8 @@
 var DoubaoWorkbench = (function() {
     var panel = null;
     var visible = false;
+    var monitorTimer = null;
+    var monitorRunning = false;
 
     function createPanel() {
         var html = `
@@ -31,7 +33,20 @@ var DoubaoWorkbench = (function() {
                 </div>
               </div>
               <div id="tab-monitor" class="wb-panel">
-                <p>盘中监控功能开发中...</p>
+                <div class="doubao-actions">
+                  <button class="btn-generate" id="btn-toggle-monitor" style="background:#27ae60;">🔴 开始监控</button>
+                  <select id="monitor-interval" style="margin-left:6px; padding:6px; border-radius:4px; border:1px solid #ccc;">
+                    <option value="30000">30秒</option>
+                    <option value="60000" selected>1分钟</option>
+                    <option value="120000">2分钟</option>
+                    <option value="300000">5分钟</option>
+                  </select>
+                  <span id="monitor-timestamp" style="margin-left:10px; font-size:12px; color:#555;"></span>
+                </div>
+                <div id="monitor-status" style="margin-bottom:10px; font-size:13px;"></div>
+                <div id="monitor-results" style="overflow-y:auto; max-height:400px;">
+                  <p>点击"开始监控"按钮，定期检查买卖点信号。</p>
+                </div>
               </div>
             </div>
             <div id="wb-resize-handle"></div>
@@ -40,6 +55,7 @@ var DoubaoWorkbench = (function() {
         $('body').append(html);
         panel = document.getElementById('doubao-workbench');
 
+        // 标签切换
         $(panel).find('.wb-tab').on('click', function() {
             var tab = $(this).data('tab');
             $(panel).find('.wb-tab').removeClass('active');
@@ -48,6 +64,7 @@ var DoubaoWorkbench = (function() {
             $('#tab-' + tab).addClass('active');
         });
 
+        // 拖拽移动
         var header = document.getElementById('wb-header');
         var isDragging = false, offsetX, offsetY;
         header.addEventListener('mousedown', function(e) {
@@ -63,6 +80,7 @@ var DoubaoWorkbench = (function() {
         });
         document.addEventListener('mouseup', function() { isDragging = false; });
 
+        // 拖拽改变大小
         var resizeHandle = document.getElementById('wb-resize-handle');
         var isResizing = false;
         var startX, startY, startW, startH;
@@ -82,17 +100,20 @@ var DoubaoWorkbench = (function() {
             panel.style.width = newW + 'px';
             panel.style.height = newH + 'px';
         });
-        document.addEventListener('mouseup', function() {
-            isResizing = false;
-        });
+        document.addEventListener('mouseup', function() { isResizing = false; });
 
+        // 策略按钮事件
         $('#btn-generate-strategy').on('click', function() { generateStrategy(); });
         $('#btn-load-cached').on('click', loadStrategy);
 
+        // 聊天发送事件
         $('#chat-send-btn').on('click', sendChat);
         $('#chat-input').on('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
         });
+
+        // 监控按钮事件
+        $('#btn-toggle-monitor').on('click', toggleMonitor);
     }
 
     function show() { if (!panel) createPanel(); panel.style.display = 'flex'; visible = true; }
@@ -175,6 +196,102 @@ var DoubaoWorkbench = (function() {
         } catch(e) {
             messagesDiv.innerHTML += '<div class="chat-message ai">❌ 出错</div>';
         }
+    }
+
+    // --- 盘中监控相关函数（手动控制版） ---
+    function toggleMonitor() {
+        if (monitorRunning) {
+            stopMonitor();
+        } else {
+            startMonitor();
+        }
+    }
+
+    function startMonitor() {
+        if (monitorTimer) return;
+        monitorRunning = true;
+        var btn = document.getElementById('btn-toggle-monitor');
+        if (btn) {
+            btn.innerHTML = '🟢 停止监控';
+            btn.style.background = '#c0392b';
+        }
+        checkMonitor();
+        var interval = parseInt(document.getElementById('monitor-interval').value) || 60000;
+        monitorTimer = setInterval(checkMonitor, interval);
+        console.log('[监控] 已启动，间隔 ' + (interval/1000) + ' 秒');
+    }
+
+    function stopMonitor() {
+        if (monitorTimer) {
+            clearInterval(monitorTimer);
+            monitorTimer = null;
+        }
+        monitorRunning = false;
+        var btn = document.getElementById('btn-toggle-monitor');
+        if (btn) {
+            btn.innerHTML = '🔴 开始监控';
+            btn.style.background = '#27ae60';
+        }
+        console.log('[监控] 已停止');
+    }
+
+    async function checkMonitor() {
+        var status = document.getElementById('monitor-status');
+        var results = document.getElementById('monitor-results');
+        var timestamp = document.getElementById('monitor-timestamp');
+
+        if (status) status.innerHTML = '⏳ 查询中...';
+        try {
+            var resp = await fetch('/api/monitor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            var data = await resp.json();
+            if (resp.ok) {
+                if (status) status.innerHTML = '✅ 检查完成';
+                if (timestamp) timestamp.innerText = data.timestamp || '';
+                displayMonitorResults(results, data);
+            } else {
+                if (status) status.innerHTML = '❌ ' + (data.error || '请求失败');
+            }
+        } catch(e) {
+            if (status) status.innerHTML = '❌ 网络错误';
+        }
+    }
+
+    function displayMonitorResults(container, data) {
+        if (!container) return;
+        var html = '';
+        var signals = (data && data.signals) ? data.signals : [];
+        var summary = (data && data.summary) ? data.summary : '';
+
+        if (!summary && (!signals || signals.length === 0)) {
+            html = '<p>暂无触发买卖点，继续观察。</p>';
+            if (data && data.error) {
+                html += '<p style="color: #e74c3c; font-size: 12px;">错误: ' + data.error + '</p>';
+            }
+        } else {
+            if (summary) {
+                html += '<div style="margin-bottom:12px; padding:10px; background:#f8f9fa; border-left:4px solid #2c3e50; font-size:13px;">' +
+                       summary.replace(/\n/g, '<br>') + '</div>';
+            }
+            if (signals && signals.length > 0) {
+                html += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
+                html += '<tr style="background:#2c3e50; color:white;"><th>信号</th><th>标的</th><th>状态</th><th>建议</th></tr>';
+                signals.forEach(function(s) {
+                    var color = s.status === 'triggered' ? '#27ae60' : (s.status === 'pending' ? '#f39c12' : '#999');
+                    html += '<tr style="border-bottom:1px solid #ddd; color:' + color + ';">';
+                    html += '<td style="padding:4px;">' + (s.type || '') + '</td>';
+                    html += '<td>' + (s.name || '') + ' ' + (s.code || '') + '</td>';
+                    html += '<td>' + (s.status || '') + '</td>';
+                    html += '<td>' + (s.suggestion || '') + '</td>';
+                    html += '</tr>';
+                });
+                html += '</table>';
+            }
+        }
+        container.innerHTML = html;
     }
 
     function init() {
