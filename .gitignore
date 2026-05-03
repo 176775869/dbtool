@@ -41,3 +41,6 @@ py/feeds/
 test_output.md
 server.log
 py/config/custom_prompt.txt
+py/data/feeds/
+server.log
+py/config/evolution_log.txt
