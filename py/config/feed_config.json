@@ -31,7 +31,9 @@
       "AUTO_LATEST:limit_down_*.txt",
       "AUTO_LATEST:qs_pool_*.txt",
       "AUTO_LATEST:market_context_*.txt"
-    ]
+    ],
+    "use_shared_memory": true,
+    "max_memory_items": 40
   },
   "monitor": {
     "prompt_intro": "你是一个盘中实时监控助手。根据以下规则和昨日策略，判断当前是否触发买卖点。",
@@ -43,13 +45,17 @@
       "AUTO_LATEST:sector_*.txt",
       "AUTO_LATEST:top_amount_*.txt",
       "AUTO_LATEST:subscription_*.txt"
-    ]
+    ],
+    "use_shared_memory": true,
+    "max_memory_items": 40
   },
   "chat": {
     "prompt_intro": "你是一个精通豆包模式交易系统的助手，请结合以下规则回答用户问题。",
     "strategy_history_days": 1,
     "files": [
       "md/豆包模式规则手册·投喂版.md"
-    ]
+    ],
+    "use_shared_memory": true,
+    "max_memory_items": 40
   }
 }
