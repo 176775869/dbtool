@@ -15,7 +15,10 @@
     "merge_replay.py": 300
   },
   "replay": {
-    "prompt_intro": "请严格按照下面的模式规则对今日市场数据进行复盘，并生成隔日交易策略。复盘报告需包含全景表。在输出结论前，必须完成以下自检：① 环境等级判定是否符合三项量化标准；② 阶段标记是否遵守隔日确认铁律；③ 锚点是否发生不应有的跳变；④ 如果今日有核心中军大涨，是否推翻了旧结论并上调了板块评分。",
+    "prompt_intro": "请严格按照豆包模式规则对今日市场数据进行复盘，并按照格式生成隔日交易策略。",
+    "strategy_history_days": 3,
+    "max_limit_up": 30,
+    "max_qs_pool": 30,
     "files": [
       "md/豆包模式规则手册·投喂版.md",
       "AUTO_LATEST:index_data_*.txt",
@@ -27,8 +30,7 @@
       "AUTO_LATEST:zhaban_*.txt",
       "AUTO_LATEST:limit_down_*.txt",
       "AUTO_LATEST:qs_pool_*.txt",
-      "AUTO_LATEST:market_context_*.txt",
-      "AUTO_LATEST:strategy_*.md"
+      "AUTO_LATEST:market_context_*.txt"
     ]
   },
   "monitor": {
@@ -45,6 +47,7 @@
   },
   "chat": {
     "prompt_intro": "你是一个精通豆包模式交易系统的助手，请结合以下规则回答用户问题。",
+    "strategy_history_days": 1,
     "files": [
       "md/豆包模式规则手册·投喂版.md"
     ]

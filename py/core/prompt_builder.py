@@ -48,13 +48,21 @@ def resolve_file(file_ref, base_dir):
             raise FileNotFoundError(f"找不到匹配文件：{pattern}。搜索路径：{tried}")
         latest = sorted(found)[-1]
         with open(latest, 'r', encoding='utf-8') as f: content = f.read()
-        # 涨停/强势股截断
-        if 'limit' in latest or 'qs_pool' in latest:
+        config = load_config()
+        replay_cfg = config.get('replay', {})
+        if 'limit' in os.path.basename(latest):
+            max_items = replay_cfg.get('max_limit_up', 30)
+        elif 'qs_pool' in os.path.basename(latest):
+            max_items = replay_cfg.get('max_qs_pool', 30)
+        else:
+            max_items = None
+        if max_items is not None and max_items > 0:
             lines = content.split('\n')
             header_end = 0
             for i, line in enumerate(lines):
                 if line.startswith('序号'): header_end = i + 1; break
-            if header_end > 0: content = '\n'.join(lines[:header_end + 30])
+            if header_end > 0:
+                content = '\n'.join(lines[:header_end + max_items])
         return content, latest
     else:
         path = os.path.join(base_dir, file_ref)
@@ -73,6 +81,17 @@ def build_prompt(scene='replay', extra_note=None):
     if scene == 'replay':
         evo = load_evolution_notes()
         if evo: prompt += f"\n{evo}\n\n"
+
+    # --- 所有场景通用的历史策略加载 ---
+    history_days = sc.get('strategy_history_days', 0)
+    if history_days > 0:
+        strategy_pattern = os.path.join(base_dir, 'strategy_*.md')
+        all_strategy_files = sorted(glob.glob(strategy_pattern), key=os.path.getmtime, reverse=True)
+        for sf in all_strategy_files[:history_days]:
+            with open(sf, 'r', encoding='utf-8') as f:
+                content = f.read()
+            prompt += f"\n--- 策略快照：{os.path.basename(sf)} ---\n{content}\n"
+
     for fr in sc['files']:
         content, res = resolve_file(fr, base_dir)
         prompt += f"\n--- 文件：{os.path.basename(res)} ---\n{content}\n"
