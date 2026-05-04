@@ -14,10 +14,9 @@ HOST = '0.0.0.0'; PORT = 8080
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY', '')
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# 路径准备
 sys.path.insert(0, os.path.join(BASE_DIR, 'py', 'core'))
 from prompt_builder import build_prompt
-from memory_manager import call_with_memory  # 共享记忆调用
+from memory_manager import call_with_memory
 
 CONFIG_PATH = os.path.join(BASE_DIR, 'py', 'config', 'feed_config.json')
 with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
@@ -69,7 +68,6 @@ def run_collector(script_name, force=False):
         return False
 
 def ensure_data_files():
-    """检查 replay 所需文件，缺失则运行对应采集脚本"""
     missing = []
     for fr in CONFIG.get('replay', {}).get('files', []):
         if fr.startswith('AUTO_LATEST:'):
@@ -92,7 +90,6 @@ def ensure_data_files():
         if not any_file_exists(pat):
             raise RuntimeError(f'无法生成 {pat}')
 
-# ---------- HTTP 服务 ----------
 class ReplayHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/.well-known/'):
@@ -114,22 +111,20 @@ class ReplayHandler(SimpleHTTPRequestHandler):
         except:
             data = {}
 
-        # ========== 聊天（使用共享记忆） ==========
+        # ========== 聊天 ==========
         if self.path == '/api/chat':
             msg = data.get('message', '').strip()
             if not msg:
                 self.send_json(400, {'error': '消息为空'})
                 return
-            # 获取聊天场景的 system_prompt（豆包规则）
-            try:
-                chat_system = build_prompt('chat')
-            except:
-                chat_system = "你是一个精通豆包模式交易系统的助手。"
-            reply = call_with_memory('chat', msg, temperature=0.7, max_tokens=2000,
+
+            # build_prompt 返回 (system_prompt, user_prompt) 元组
+            prompt_tuple = build_prompt('chat')
+            # 把元组作为 user_content 传给 call_with_memory
+            reply = call_with_memory('chat', prompt_tuple,
                           use_memory=CONFIG.get('chat', {}).get('use_shared_memory', True),
                           max_memory_items=CONFIG.get('chat', {}).get('max_memory_items', 40),
-                          memory_content=msg,
-                          system_prompt=chat_system)
+                          memory_content=msg)
             print(f"[Token] 聊天 | 用户 {len(msg)}字符 | 预估token ~{len(msg)//2}")
             self.send_json(200, {'reply': reply})
             return
@@ -138,8 +133,6 @@ class ReplayHandler(SimpleHTTPRequestHandler):
         if self.path == '/api/generate':
             force = data.get('force', False)
             cp = data.get('custom_prompt', None)
-
-            # 缓存逻辑
             if not force and not cp:
                 sf = glob.glob('strategy_*.md')
                 if sf:
@@ -155,22 +148,20 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                 self.send_json(500, {'error': str(e)})
                 return
 
-            # 构建并发送 Prompt
-            user_prompt = build_prompt('replay', extra_note=cp)
-            ai_reply = call_with_memory('replay', user_prompt, temperature=0.1, max_tokens=8192,
+            # build_prompt 返回 (system_prompt, user_prompt) 元组
+            prompt_tuple = build_prompt('replay', extra_note=cp)
+            reply = call_with_memory('replay', prompt_tuple,
                           use_memory=CONFIG.get('replay', {}).get('use_shared_memory', True),
                           max_memory_items=CONFIG.get('replay', {}).get('max_memory_items', 40),
                           memory_content=cp if cp else '自动复盘')
-            print(f"[Token] 复盘 | 用户 {len(user_prompt)}字符 | 预估token ~{len(user_prompt)//2}")
+            print(f"[Token] 复盘 | 用户 {len(prompt_tuple[1]) if isinstance(prompt_tuple, tuple) else len(prompt_tuple)}字符")
 
-            # 保存策略文件
             today = datetime.now().strftime('%Y%m%d')
             next_date = (datetime.strptime(today, '%Y%m%d') + timedelta(days=1)).strftime('%Y%m%d')
             out_file = os.path.join(BASE_DIR, f'strategy_{next_date}.md')
             with open(out_file, 'w', encoding='utf-8') as f:
-                f.write(ai_reply)
-
-            self.send_json(200, {'file': out_file, 'content': ai_reply, 'cached': False})
+                f.write(reply)
+            self.send_json(200, {'file': out_file, 'content': reply, 'cached': False})
             return
 
         # ========== 监控 ==========
@@ -178,29 +169,29 @@ class ReplayHandler(SimpleHTTPRequestHandler):
             try:
                 run_collector('get_index_only.py')
                 run_collector('get_subscription_data.py')
-                user_prompt = build_prompt('monitor')
-                ai_reply = call_with_memory('monitor', user_prompt, temperature=0.1, max_tokens=2048,
-                              use_memory=CONFIG.get('monitor', {}).get('use_shared_memory', True),
-                              max_memory_items=CONFIG.get('monitor', {}).get('max_memory_items', 40),
-                              memory_content='定时监控（无特殊指令）')
-                print(f"[Token] 监控 | 用户 {len(user_prompt)}字符 | 预估token ~{len(user_prompt)//2}")
-                # 解析 JSON 结果
+                prompt_tuple = build_prompt('monitor')
+                reply = call_with_memory('monitor', prompt_tuple,
+                          use_memory=False,
+                          max_memory_items=0,
+                          memory_content=None)
+                user_len = len(prompt_tuple[1]) if isinstance(prompt_tuple, tuple) else len(prompt_tuple)
+                print(f"[Token] 监控 | 用户 {user_len}字符 | 预估token ~{user_len//2}")
                 try:
-                    match = re.search(r'\{.*\}', ai_reply, re.DOTALL)
+                    match = re.search(r'\{.*\}', reply, re.DOTALL)
                     if match:
                         parsed = json.loads(match.group())
                         parsed['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         self.send_json(200, parsed)
                     else:
-                        self.send_json(200, {"signals": [], "summary": ai_reply[:200]})
+                        self.send_json(200, {"signals": [], "summary": reply[:200]})
                 except:
-                    self.send_json(200, {"signals": [], "summary": ai_reply[:200]})
+                    self.send_json(200, {"signals": [], "summary": reply[:200]})
             except Exception as e:
                 logging.error(f"监控错误: {e}")
                 self.send_json(500, {'error': str(e)})
             return
 
-        # ========== 手动全量采集 ==========
+        # ========== 手动采集 ==========
         if self.path == '/api/collect':
             try:
                 for s in CONFIG.get('collectors', {}):

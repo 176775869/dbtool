@@ -15,10 +15,11 @@
     "merge_replay.py": 300
   },
   "replay": {
-    "prompt_intro": "请严格按照豆包模式规则对今日市场数据进行复盘，并按照格式生成隔日交易策略。",
-    "strategy_history_days": 3,
-    "max_limit_up": 30,
-    "max_qs_pool": 30,
+    "system_prompt": "你是一个严格遵循《豆包模式规则手册》的首席策略分析师。你必须逐条执行评分流程，不得自创评分方式。取最强中军作为评分依据，严禁取平均或最差。",
+    "prompt_intro": "请严格按照下面的模式规则对今日市场数据进行复盘，并按照格式生成隔日交易策略。",
+    "strategy_history_days": 1,
+    "max_limit_up": 200,
+    "max_qs_pool": 200,
     "files": [
       "md/豆包模式规则手册·投喂版.md",
       "md/标杆策略案例库.md",
@@ -34,12 +35,22 @@
       "AUTO_LATEST:market_context_*.txt",
       "AUTO_LATEST:py/data/anchor_history.json"
     ],
+    "api_params": {
+      "temperature": 0.1,
+      "max_tokens": 8192,
+      "top_p": 0.9,
+      "frequency_penalty": 0.0,
+      "presence_penalty": 0.0
+    },
     "use_shared_memory": true,
     "max_memory_items": 40
   },
   "monitor": {
-    "prompt_intro": "你是一个盘中实时监控助手。根据以下规则和昨日策略，判断当前是否触发买卖点。",
-    "strategy_history_days": 1,
+    "system_prompt": "你是一个盘中实时监控助手。根据规则和今日市场数据，判断是否触发买卖点。早盘优先D2信号，尾盘优先D3信号。",
+    "prompt_intro": "根据以下规则和昨日策略，判断当前是否触发买卖点。",
+    "strategy_history_days": 0,
+    "max_limit_up": 30,
+    "max_qs_pool": 50,
     "files": [
       "md/豆包模式规则手册·投喂版.md",
       "AUTO_LATEST:index_data_*.txt",
@@ -48,15 +59,30 @@
       "AUTO_LATEST:top_amount_*.txt",
       "AUTO_LATEST:subscription_*.txt"
     ],
-    "use_shared_memory": true,
-    "max_memory_items": 40
+    "api_params": {
+      "temperature": 0.1,
+      "max_tokens": 2048,
+      "top_p": 0.9,
+      "frequency_penalty": 0.0,
+      "presence_penalty": 0.0
+    },
+    "use_shared_memory": false,
+    "max_memory_items": 0
   },
   "chat": {
-    "prompt_intro": "你是一个精通豆包模式交易系统的助手，请结合以下规则回答用户问题。",
+    "system_prompt": "你是一位经验丰富的A股短线交易顾问，精通豆包模式交易系统。请用自然、详细的中文与用户交流，主动提供有深度的市场分析和交易建议。遇到问题可以直接回答，不需要先声明身份。",
+    "prompt_intro": "请结合以下规则回答用户问题。",
     "strategy_history_days": 1,
     "files": [
       "md/豆包模式规则手册·投喂版.md"
     ],
+    "api_params": {
+      "temperature": 0.6,
+      "max_tokens": 800,
+      "top_p": 0.9,
+      "frequency_penalty": 0.3,
+      "presence_penalty": 0.2
+    },
     "use_shared_memory": true,
     "max_memory_items": 40
   }

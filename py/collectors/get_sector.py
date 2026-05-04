@@ -1,7 +1,8 @@
 # coding=utf-8
 """
 获取板块行情数据（行业板块 + 概念板块）
-使用修正后的 API 参数，确保概念板块正常返回
+概念板块增加涨跌比 + 主力资金净流入
+行业板块增加主力资金净流入
 """
 import requests
 import json
@@ -14,13 +15,13 @@ def get_output_path(filename):
     return os.path.join(script_dir, filename)
 
 def fetch_concept_sectors():
-    """获取概念板块数据（已修复）"""
+    """获取概念板块数据"""
     url = (
         "https://push2.eastmoney.com/api/qt/clist/get?"
         "cb=cb&fid=f62&po=1&pz=10000&pn=1&np=1&fltt=2&invt=2"
         "&ut=8dec03ba335b81bf4ebdf7b29ec27d15"
         "&fs=m:90+t:3"
-        "&fields=f12,f14,f2,f3,f4,f6,f62,f128"
+        "&fields=f12,f14,f2,f3,f4,f6,f62,f128,f104,f105"
     )
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -53,7 +54,7 @@ def fetch_industry_sectors():
         "https://push2.eastmoney.com/api/qt/clist/get?"
         "np=1&fltt=1&invt=2&cb=cb"
         "&fs=m:90+t:2+f:!50"
-        "&fields=f12,f14,f2,f3,f4,f6,f20,f104,f105,f128,f140"
+        "&fields=f12,f14,f2,f3,f4,f6,f20,f104,f105,f128,f140,f62"
         "&fid=f3&pn=1&pz=10000&po=1&dect=1"
         "&ut=fa5fd1943c7b386f172d6893dbfba10b"
     )
@@ -105,12 +106,12 @@ if __name__ == '__main__':
         for item in industry_sorted[:15]:
             name = item.get('f14', '')
             change = float(item.get('f3', 0))
-            # 修复：强制转换为 float
             amount = float(item.get('f6', 0)) / 1e8 if item.get('f6', '') != '' else 0
             leader = item.get('f128', '')
             up_count = item.get('f104', '?')
             down_count = item.get('f105', '?')
-            f.write(f"{name}: {change:+.2f}% 成交{amount:.1f}亿 涨{up_count}/跌{down_count} 领涨:{leader}\n")
+            net_inflow = float(item.get('f62', 0) or 0) / 1e8
+            f.write(f"{name}: {change:+.2f}% 成交{amount:.1f}亿 涨{up_count}/跌{down_count} 主力净流入{net_inflow:.2f}亿 领涨:{leader}\n")
 
         # ---- 概念板块 ----
         f.write("\n=== 概念板块涨幅前20 ===\n")
@@ -118,10 +119,12 @@ if __name__ == '__main__':
         for item in concept_sorted[:20]:
             name = item.get('f14', '')
             change = float(item.get('f3', 0))
-            # 修复：强制转换为 float
             amount = float(item.get('f6', 0)) / 1e8 if item.get('f6', '') != '' else 0
             leader = item.get('f128', '')
-            f.write(f"{name}: {change:+.2f}% 成交{amount:.1f}亿 领涨:{leader}\n")
+            up_count = item.get('f104', '?')
+            down_count = item.get('f105', '?')
+            net_inflow = float(item.get('f62', 0) or 0) / 1e8
+            f.write(f"{name}: {change:+.2f}% 成交{amount:.1f}亿 涨{up_count}/跌{down_count} 主力净流入{net_inflow:.2f}亿 领涨:{leader}\n")
 
     print(f"板块数据已保存至 {filename}")
     if concept_sorted:
