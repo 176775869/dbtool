@@ -21,6 +21,7 @@
     "max_qs_pool": 30,
     "files": [
       "md/豆包模式规则手册·投喂版.md",
+      "md/标杆策略案例库.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
       "AUTO_LATEST:sector_*.txt",
@@ -30,16 +31,17 @@
       "AUTO_LATEST:zhaban_*.txt",
       "AUTO_LATEST:limit_down_*.txt",
       "AUTO_LATEST:qs_pool_*.txt",
-      "AUTO_LATEST:market_context_*.txt"
+      "AUTO_LATEST:market_context_*.txt",
+      "AUTO_LATEST:py/data/anchor_history.json"
     ],
     "use_shared_memory": true,
     "max_memory_items": 40
   },
   "monitor": {
     "prompt_intro": "你是一个盘中实时监控助手。根据以下规则和昨日策略，判断当前是否触发买卖点。",
+    "strategy_history_days": 1,
     "files": [
       "md/豆包模式规则手册·投喂版.md",
-      "AUTO_LATEST:strategy_*.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
       "AUTO_LATEST:sector_*.txt",
