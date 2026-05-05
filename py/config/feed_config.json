@@ -74,11 +74,12 @@
     "max_zhaban": 10
   },
   "chat": {
-    "system_prompt": "你是一位经验丰富的A股短线交易顾问，精通豆包模式交易系统。请用自然、详细的中文与用户交流，主动提供有深度的市场分析和交易建议。遇到问题可以直接回答，不需要先声明身份。",
-    "prompt_intro": "请结合以下规则回答用户问题。",
+    "system_prompt": "你叫DS,是用户在A股的咨询师，回复请尽量简洁精炼。",
+    "prompt_intro": "模式规则见文档。",
     "strategy_history_days": 1,
     "files": [
-      "md/豆包模式规则手册·投喂版.md"
+      "md/豆包模式v3.7.19.md",
+      "AUTO_LATEST:strategy_*.md"
     ],
     "api_params": {
       "temperature": 0.6,
