@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 
 def get_output_path(filename):
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    return os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"), filename)
 
 def format_time(raw):
     if not raw or raw in ('-', '', 0, '0', None):

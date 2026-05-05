@@ -4,13 +4,13 @@ import requests, json, time, os, re, glob
 from datetime import datetime
 
 def get_output_path(filename):
-    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
+    data_dir = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"), '..', 'data')
     os.makedirs(data_dir, exist_ok=True)
     return os.path.join(data_dir, filename)
 
 def _get_tracking_keys():
     """从最新策略文件提取纯中文跟踪方向（避免特殊符号）"""
-    base = os.path.dirname(os.path.abspath(__file__))
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
     root = os.path.join(base, '..', '..')
     files = glob.glob(os.path.join(root, 'strategy_*.md'))
     if not files:

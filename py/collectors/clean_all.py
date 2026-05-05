@@ -1,56 +1,25 @@
-# coding=utf-8
-"""
-清理 py 目录下所有历史生成的临时复盘文件
-保留核心配置及锚点数据
-"""
-import os
-import glob
+"""清理 py/data/ 下过时的临时/中间文件，保留最新必要数据"""
+import os, glob, time
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
+now = time.time()
+# 保留最近 12 小时的 replay_full，其余删除
+for f in glob.glob(os.path.join(DATA_DIR, 'replay_full_*.txt')):
+    if os.path.getmtime(f) < now - 43200:
+        os.remove(f)
+        print(f'[clean] 已删除旧 replay: {os.path.basename(f)}')
 
-# 匹配所有带日期标记的临时文件 (txt / json)
-patterns = [
-    'index_data_*.txt',
-    'sector_data_*.txt',
-    'sector_ma_data_*.txt',
-    'limit_up_data_*.txt',
-    'limit_up_raw_*.json',
-    'zhaban_data_*.txt',
-    'limit_down_data_*.txt',
-    'qs_pool_data_*.txt',
-    'mid_cap_data_*.txt',
-    'top_amount_data_*.txt',
-    'history_compare_*.txt',
-    'sector_limit_up_*.txt',
-    'sector_limit_down_*.txt',
-    'replay_full_*.txt',
-    'last_strategy_date.txt',          # 策略生成日期锁
-]
+# 删除所有 feed_ 和 result_ 文件
+for pat in ['feed_*.txt', 'result_*.txt', 'subscription_*.txt']:
+    for f in glob.glob(os.path.join(DATA_DIR, pat)):
+        os.remove(f)
+        print(f'[clean] 已删除 {os.path.basename(f)}')
 
-deleted = 0
-for pattern in patterns:
-    for fpath in glob.glob(os.path.join(script_dir, pattern)):
-        fname = os.path.basename(fpath)
-        # 保留核心文件
-        if fname in ['history.json', 'price_history.csv', 'global_anchor.json', 'candidate_scores.json', 'config.json']:
-            continue
-        try:
-            os.remove(fpath)
-            deleted += 1
-            print(f'已删除: {fname}')
-        except Exception as e:
-            print(f'删除失败 {fname}: {e}')
+# 删除 2 天前的旧 sector、limit 等数据文件（保留最新即可）
+for pat in ['sector_data_*.txt', 'limit_up_data_*.txt', 'zhaban_data_*.txt', 'limit_down_data_*.txt']:
+    for f in glob.glob(os.path.join(DATA_DIR, pat)):
+        if os.path.getmtime(f) < now - 172800:
+            os.remove(f)
+            print(f'[clean] 已删除旧数据: {os.path.basename(f)}')
 
-# 清理上级目录的策略文件
-parent_dir = os.path.join(script_dir, '..')
-strategy_pattern = os.path.join(parent_dir, 'strategy_*.md')
-for fpath in glob.glob(strategy_pattern):
-    fname = os.path.basename(fpath)
-    try:
-        os.remove(fpath)
-        deleted += 1
-        print(f'已删除: ../{fname}')
-    except Exception as e:
-        print(f'删除失败 ../{fname}: {e}')
-
-print(f'\n清理完成，共删除 {deleted} 个文件。')
+print('[clean] 清理完成')

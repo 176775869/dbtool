@@ -10,9 +10,9 @@ now = datetime.now()
 date_str = now.strftime('%Y%m%d')
 time_str = now.strftime('%H%M%S')
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 # 输出到上一级的 data 目录
-output_dir = os.path.join(script_dir, '..', 'data')
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 os.makedirs(output_dir, exist_ok=True)
 
 files = [

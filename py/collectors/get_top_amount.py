@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 
 def get_output_path(filename):
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    return os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"), filename)
 
 def fetch_all_stocks():
     """用你req.py里已验证的接口拉取全市场数据"""

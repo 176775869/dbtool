@@ -11,7 +11,7 @@ import csv
 from datetime import datetime, timedelta
 
 def get_output_path(filename):
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    return os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"), filename)
 
 def fetch_json(url, referer="https://quote.eastmoney.com/"):
     headers = {

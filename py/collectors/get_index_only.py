@@ -7,7 +7,7 @@ from datetime import datetime
 
 def get_output_path(filename):
     """获取文件保存路径：与脚本同目录"""
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
     return os.path.join(script_dir, filename)
 
 def get_index_quotes():

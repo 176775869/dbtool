@@ -4,7 +4,7 @@ import requests, json, time, os
 from datetime import datetime
 
 def get_output_path(filename):
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    return os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"), filename)
 
 def fetch_qs_pool_full(date_str):
     all_items = []

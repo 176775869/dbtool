@@ -7,7 +7,7 @@ import os
 from datetime import datetime, timedelta
 
 def get_output_path(filename):
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+    return os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data"), filename)
 
 def extract_today_summary(date_str):
     """从当天已生成的数据文件中提取关键指标"""
