@@ -50,6 +50,34 @@ def auto_discover_sectors(date_str):
             codes.append((code, name))
     return codes
 
+def _inject_tracking_codes():
+    try:
+        from get_sector import extract_tracking_directions, filter_tracking_sectors
+        import requests, json
+        tracking_dirs = extract_tracking_directions()
+        if not tracking_dirs:
+            return []
+        url = "https://push2.eastmoney.com/api/qt/clist/get"
+        params = {
+            "pn": "1", "pz": "500", "po": "1", "np": "1",
+            "ut": "8dec03ba335b81bf4ebdf7b29ec27d15",
+            "fltt": "2", "invt": "2",
+            "fid": "f3", "fs": "m:90+t:3",
+            "fields": "f12,f14"
+        }
+        headers = {'User-Agent': 'Mozilla/5.0', 'Referer': 'https://quote.eastmoney.com/'}
+        resp = requests.get(url, params=params, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            text = resp.text
+            s = text.index('(') + 1
+            e = text.rindex(')')
+            data = json.loads(text[s:e])
+            all_sectors = data.get('data', {}).get('diff', [])
+            return filter_tracking_sectors(all_sectors, tracking_dirs)
+    except Exception as e:
+        print(f"动态注入失败: {e}")
+    return []
+
 def get_sector_ma(code, name):
     url = (
         f"https://push2his.eastmoney.com/api/qt/stock/kline/get?"
