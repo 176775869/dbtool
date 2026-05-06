@@ -87,7 +87,7 @@ def call_with_memory(scene, user_content, temperature=0.1, max_tokens=8192,
         memory = load_memory() if use_memory else []
 
     # 分离 system_prompt 和 user_prompt
-    system_prompt = "你是一个专业的交易分析助手。"
+    system_prompt = ""
     actual_user_content = user_content
     if isinstance(user_content, tuple) and len(user_content) == 2:
         system_prompt = user_content[0]

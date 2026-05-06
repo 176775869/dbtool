@@ -16,7 +16,7 @@
   },
   "replay": {
     "system_prompt": "你是一个严格遵循《豆包模式规则手册》的首席策略分析师。你必须逐条执行评分流程，不得自创评分方式。取最强中军作为评分依据，严禁取平均或最差。",
-    "prompt_intro": "请严格按照下面的模式规则对今日市场数据进行复盘，并按照格式生成隔日交易策略。",
+    "prompt_intro": "",
     "strategy_history_days": 1,
     "max_limit_up": 200,
     "max_qs_pool": 200,
@@ -49,12 +49,13 @@
   },
   "monitor": {
     "system_prompt": "你是一个盘中实时监控助手。根据规则和今日市场数据，判断是否触发买卖点。早盘优先D2信号，尾盘优先D3信号。",
-    "prompt_intro": "如果无买点触发，说出未触发原因以及触发条件；然后给出总体仓位和持仓建议。",
+    "prompt_intro": "",
     "strategy_history_days": 0,
     "max_limit_up": 30,
     "max_qs_pool": 50,
     "files": [
       "md/豆包模式规则手册·投喂版.md",
+      "AUTO_LATEST:strategy_*.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
       "AUTO_LATEST:sector_*.txt",
@@ -74,12 +75,11 @@
     "max_zhaban": 10
   },
   "chat": {
-    "system_prompt": "你叫DS,是用户在A股的咨询师，回复请尽量简洁精炼。",
-    "prompt_intro": "模式规则见文档。",
+    "system_prompt": "你是用户在A股的咨询师，回复请尽量简洁精炼。",
+    "prompt_intro": "",
     "strategy_history_days": 1,
     "files": [
-      "md/豆包模式v3.7.19.md",
-      "AUTO_LATEST:strategy_*.md"
+      "md/豆包模式v3.7.19.md"
     ],
     "api_params": {
       "temperature": 0.6,

@@ -34,12 +34,12 @@ var DoubaoWorkbench = (function() {
               </div>
               <div id="tab-monitor" class="wb-panel">
                 <div class="doubao-actions">
-                  <button class="btn-generate" id="btn-manual-check" style="background:#666;">🔄 手动刷新</button>
                   <button class="btn-generate" id="btn-toggle-monitor" style="background:#27ae60;">🔴 自动监控</button>
+                  <button class="btn-generate" id="btn-manual-check" style="background:#666;">🔄 手动刷新</button>
                   <select id="monitor-interval" style="margin-left:6px; padding:6px; border-radius:4px; border:1px solid #ccc;">
                     <option value="30000">30秒</option>
-                    <option value="120000">2分钟</option>
-                    <option value="300000" selected>5分钟</option>
+                    <option value="120000" selected>2分钟</option>
+                    <option value="300000">5分钟</option>
                     <option value="600000">10分钟</option>
                   </select>
                   <span id="monitor-timestamp" style="margin-left:10px; font-size:12px; color:#555;"></span>
