@@ -45,14 +45,39 @@ def run_collector(script_name, force=False):
 
 class ReplayHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
+        if self.path == '/favicon.ico':
+            self.send_error(404)
+            return
         if self.path.startswith('/.well-known/'):
             self.send_error(404)
             return
-        if self.path == '/api/workbook':
+        if self.path.startswith('/api/workbook'):
+            from urllib.parse import urlparse, parse_qs
+            qs = parse_qs(urlparse(self.path).query)
+            year = qs.get('year', [None])[0]
+            print(f"[EXCEL] 请求年份: {year or '默认'}")
+
+            from workbook_loader import get_workbook_path
+            path = get_workbook_path(year)
+            print(f"[EXCEL] 文件路径: {path}")
+            if path:
+                import os as _os
+                print(f"[EXCEL] 文件大小: {_os.path.getsize(path)} 字节")
+
+            if not path:
+                self.send_json(404, {'error': f'未找到{year}年的备份文件'})
+                return
+
+            with open(path, 'rb') as f:
+                data = f.read()
+            print(f"[EXCEL] 已返回 {len(data)} 字节")
+
             self.send_response(200)
-            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            self.send_header('Content-Length', str(len(data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(json.dumps({}, ensure_ascii=False).encode('utf-8'))
+            self.wfile.write(data)
             return
         super().do_GET()
 

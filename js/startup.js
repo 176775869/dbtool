@@ -322,6 +322,36 @@ var startup = (function(text) {
 		});
 
 		window.onload = function(){
+			// 在线模式自动从服务端加载 Excel 文件
+			// 在线模式自动从服务端加载 Excel 文件
+			if (isOnline) {
+				console.log('[WORKBOOK] 在线模式，开始自动加载 Excel...');
+				document.querySelector('.loader-container').style.display = 'block';
+				fetch('/api/workbook')
+					.then(function(resp) {
+						console.log('[WORKBOOK] 收到响应, status:', resp.status, 'content-length:', resp.headers.get('content-length'));
+						if (!resp.ok) throw new Error('HTTP ' + resp.status);
+						return resp.arrayBuffer();
+					})
+					.then(function(buffer) {
+						console.log('[WORKBOOK] buffer 大小:', buffer.byteLength, '字节');
+						startTime = window.performance.now();
+						var data = new Uint8Array(buffer);
+						var arr = [];
+						for (var i = 0; i < data.length; i++) {
+							arr.push(String.fromCharCode(data[i]));
+						}
+						var binaryStr = arr.join('');
+						console.log('[WORKBOOK] 转二进制字符串长度:', binaryStr.length);
+						console.log('[WORKBOOK] 前20字符:', binaryStr.substring(0, 20));
+						updateTitle('auto');
+						loadExcelDone(binaryStr);
+					})
+					.catch(function(err) {
+						console.log('[WORKBOOK] 自动加载失败:', err.message);
+						document.querySelector('.loader-container').style.display = 'none';
+					});
+			}
 			updateTitle(Configure.version);
 			$('#date').val(Configure.getDateStr(Configure.date, '-'));
 			$('#rtShowdays').val(Configure.RT_canvas_show_days_num/2);
@@ -329,6 +359,11 @@ var startup = (function(text) {
 			// 在线模式：初始隐藏表格和表单，等待Excel加载后显示
 			if (isOnline) {
 				$('#tbl, #form1, #form2, #form3').hide();
+                var excelInput = document.getElementById('excel-file');
+                if (excelInput) {
+                    excelInput.disabled = true;
+                    excelInput.title = '在线模式，文件自动加载';
+                }
 			}
 
 			var fp = function() {

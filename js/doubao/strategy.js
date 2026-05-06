@@ -6,7 +6,7 @@ var DoubaoWorkbench = (function() {
 
     function createPanel() {
         var html = `
-          <div id="doubao-workbench" style="display:none;">
+          <div id="doubao-workbench" style="display:none; position:fixed; width:calc(100vw - 50px); height:calc(100vh - 50px); top:25px; left:25px;">
             <div id="wb-header">
               <div class="wb-tabs">
                 <button class="wb-tab active" data-tab="strategy">📈 复盘</button>
