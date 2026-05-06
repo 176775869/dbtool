@@ -17,47 +17,21 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(BASE_DIR, 'py', 'core'))
 from prompt_builder import build_prompt
 from memory_manager import call_with_memory
+from collector_scheduler import should_collect
 
 CONFIG_PATH = os.path.join(BASE_DIR, 'py', 'config', 'feed_config.json')
 with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     CONFIG = json.load(f)
 
-_last_collect_time = {}
-DATA_DIRS = ['py/data', 'py/collectors']
-
-FILE_COLLECTOR_MAP = {
-    'index_data_*.txt': 'get_index_only.py',
-    'limit_up_*.txt': 'get_limit_up.py',
-    'sector_ma_*.txt': 'get_sector_ma.py',
-    'sector_*.txt': 'get_sector.py',
-    'top_amount_*.txt': 'get_top_amount.py',
-    'mid_cap_*.txt': 'get_mid_cap.py',
-    'zhaban_*.txt': 'get_zhaban.py',
-    'limit_down_*.txt': 'get_limit_down.py',
-    'qs_pool_*.txt': 'get_qs_pool.py',
-    'market_context_*.txt': 'market_context_builder.py',
-    'subscription_*.txt': 'get_subscription_data.py',
-    'replay_full_*.txt': 'merge_replay.py',
-}
-
-def any_file_exists(pattern):
-    for d in DATA_DIRS:
-        if glob.glob(os.path.join(BASE_DIR, d, pattern)):
-            return True
-    return False
+# 调度由 collector_scheduler.should_collect 统一管理
 
 def run_collector(script_name, force=False):
-    interval = CONFIG.get('collectors', {}).get(script_name, 0)
-    now = time.time()
-    last = _last_collect_time.get(script_name, 0)
-    if not force and interval > 0 and (now - last) < interval:
-        return True
+    """运行采集脚本，调度决策由 collector_scheduler.should_collect 控制"""
     path = os.path.join(BASE_DIR, 'py', 'collectors', script_name)
     if not os.path.exists(path):
         return False
     try:
         result = subprocess.run(['python', path], cwd=BASE_DIR, capture_output=True, encoding='utf-8', timeout=60)
-        _last_collect_time[script_name] = time.time()
         if result.returncode != 0:
             logging.error(f'{script_name} 失败: {result.stderr.strip()}')
             return False
@@ -67,28 +41,7 @@ def run_collector(script_name, force=False):
         logging.error(f'{script_name} 异常: {e}')
         return False
 
-def ensure_data_files():
-    missing = []
-    for fr in CONFIG.get('replay', {}).get('files', []):
-        if fr.startswith('AUTO_LATEST:'):
-            pat = fr[len('AUTO_LATEST:'):]
-            if not any_file_exists(pat):
-                missing.append(pat)
-    if not missing:
-        return
-    print(f"需要生成: {missing}")
-    for pat in missing:
-        script = FILE_COLLECTOR_MAP.get(pat)
-        if not script:
-            continue
-        for attempt in range(3):
-            if run_collector(script, force=True):
-                time.sleep(1)
-                if any_file_exists(pat):
-                    break
-            time.sleep(2)
-        if not any_file_exists(pat):
-            raise RuntimeError(f'无法生成 {pat}')
+# ensure_data_files 已废弃，采集调度由 collector_scheduler.should_collect 接管
 
 class ReplayHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -142,12 +95,10 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                     self.send_json(200, {'file': latest, 'content': content, 'cached': True})
                     return
 
-            try:
-                ensure_data_files()
-            except Exception as e:
-                self.send_json(500, {'error': str(e)})
-                return
-
+            # 复盘前强制全量采集
+            for s, interval in CONFIG.get('collectors', {}).items():
+                if should_collect(s, interval, force=True):
+                    run_collector(s, force=True)
             # build_prompt 返回 (system_prompt, user_prompt) 元组
             prompt_tuple = build_prompt('replay', extra_note=cp)
             reply = call_with_memory('replay', prompt_tuple,
@@ -168,8 +119,9 @@ class ReplayHandler(SimpleHTTPRequestHandler):
         if self.path == '/api/monitor':
             print("[MONITOR] 收到前端监控请求")
             try:
-                run_collector('get_index_only.py')
-                run_collector('get_subscription_data.py')
+                for s, interval in CONFIG.get('collectors', {}).items():
+                    if should_collect(s, interval, force=False):
+                        run_collector(s, force=True)
                 prompt_tuple = build_prompt('monitor')
                 reply = call_with_memory('monitor', prompt_tuple,
                           use_memory=False,

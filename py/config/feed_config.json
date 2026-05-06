@@ -11,8 +11,7 @@
     "get_mid_cap.py": 60,
     "get_history.py": 300,
     "get_subscription_data.py": 10,
-    "market_context_builder.py": 300,
-    "merge_replay.py": 300
+    "market_context_builder.py": 300
   },
   "replay": {
     "system_prompt": "你是一个严格遵循《豆包模式规则手册》的首席策略分析师。你必须逐条执行评分流程，不得自创评分方式。取最强中军作为评分依据，严禁取平均或最差。",
