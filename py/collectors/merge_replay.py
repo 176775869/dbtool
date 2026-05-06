@@ -28,6 +28,7 @@ files = [
     (f'mid_cap_data_{date_str}.txt', '核心中军行情'),
     (f'top_amount_data_{date_str}.txt', '成交额Top20'),
     (f'history_compare_{date_str}.txt', '历史数据对比'),
+    (f'subscription_{date_str}.txt', '电报数据'),
 ]
 
 output_file = os.path.join(output_dir, f'replay_full_{date_str}_{time_str}.txt')

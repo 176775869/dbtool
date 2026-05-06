@@ -6,24 +6,28 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
 
 def get_monitor_stocks():
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    strategy_files = []
-    for f in os.listdir(base_dir):
-        if f.startswith('strategy_') and f.endswith('.md'):
-            strategy_files.append(os.path.join(base_dir, f))
-    if not strategy_files:
-        return {}
-    latest = max(strategy_files, key=os.path.getmtime)
-    with open(latest, 'r', encoding='utf-8') as f:
-        content = f.read()
-    pattern = r'([\u4e00-\u9fa5]+)\s*\((\d{6})\)|(\d{6})'
-    stocks = {}
-    for match in re.finditer(pattern, content):
-        name = match.group(1)
-        code = match.group(2) or match.group(3)
-        if code:
-            market = '1' if code.startswith('6') else '0'
-            stocks[code] = {'name': name, 'market': market, 'code': code}
+    try:
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        strategy_files = []
+        for f in os.listdir(base_dir):
+            if f.startswith('strategy_') and f.endswith('.md'):
+                strategy_files.append(os.path.join(base_dir, f))
+        if not strategy_files:
+            return {}
+        latest = max(strategy_files, key=os.path.getmtime)
+        with open(latest, 'r', encoding='utf-8') as f:
+            content = f.read()
+        pattern = r'([\u4e00-\u9fa5]+)\s*\((\d{6})\)|(\d{6})'
+        stocks = {}
+        for match in re.finditer(pattern, content):
+            name = match.group(1)
+            code = match.group(2) or match.group(3)
+            if code:
+                market = '1' if code.startswith('6') else '0'
+                stocks[code] = {'name': name, 'market': market, 'code': code}
+    except Exception:
+        # 竞价前策略文件可能尚未生成或者分时数据没有更新，静默跳过
+        return{}
     return stocks
 
 def get_fenshi(code, market):

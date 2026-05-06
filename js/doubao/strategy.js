@@ -34,12 +34,13 @@ var DoubaoWorkbench = (function() {
               </div>
               <div id="tab-monitor" class="wb-panel">
                 <div class="doubao-actions">
-                  <button class="btn-generate" id="btn-toggle-monitor" style="background:#27ae60;">🔴 开始监控</button>
+                  <button class="btn-generate" id="btn-manual-check" style="background:#666;">🔄 手动刷新</button>
+                  <button class="btn-generate" id="btn-toggle-monitor" style="background:#27ae60;">🔴 自动监控</button>
                   <select id="monitor-interval" style="margin-left:6px; padding:6px; border-radius:4px; border:1px solid #ccc;">
                     <option value="30000">30秒</option>
-                    <option value="60000" selected>1分钟</option>
                     <option value="120000">2分钟</option>
-                    <option value="300000">5分钟</option>
+                    <option value="300000" selected>5分钟</option>
+                    <option value="600000">10分钟</option>
                   </select>
                   <span id="monitor-timestamp" style="margin-left:10px; font-size:12px; color:#555;"></span>
                 </div>
@@ -114,6 +115,8 @@ var DoubaoWorkbench = (function() {
 
         // 监控按钮事件
         $('#btn-toggle-monitor').on('click', toggleMonitor);
+        // 手动刷新按钮
+        $('#btn-manual-check').on('click', function() { checkMonitor(); });
     }
 
     function show() { if (!panel) createPanel(); panel.style.display = 'flex'; visible = true; }
@@ -128,6 +131,7 @@ var DoubaoWorkbench = (function() {
         try {
             var resp = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({force:false}) });
             var data = await resp.json();
+            console.log('[MONITOR] 收到响应，状态码:', resp.status, '数据长度:', JSON.stringify(data).length);
             if (resp.ok) {
                 status.innerHTML = '✅ ' + (data.cached ? '缓存' : '最新') + '：' + data.file;
                 displayMarkdown(output, data.content);
@@ -157,6 +161,7 @@ var DoubaoWorkbench = (function() {
                 body: JSON.stringify(requestBody)
             });
             var data = await resp.json();
+            console.log('[MONITOR] 收到响应，状态码:', resp.status, '数据长度:', JSON.stringify(data).length);
             if (resp.ok) {
                 status.innerHTML = '✅ 生成成功：' + data.file;
                 displayMarkdown(output, data.content);
@@ -189,6 +194,7 @@ var DoubaoWorkbench = (function() {
         try {
             var resp = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:msg, history:chatHistory.slice(-6)}) });
             var data = await resp.json();
+            console.log('[MONITOR] 收到响应，状态码:', resp.status, '数据长度:', JSON.stringify(data).length);
             var reply = data.reply || '无响应';
             messagesDiv.innerHTML += '<div class="chat-message ai">' + (typeof marked !== 'undefined' ? marked.parse(reply) : reply) + '</div>';
             chatHistory.push({role:'assistant', content:reply});
@@ -236,18 +242,21 @@ var DoubaoWorkbench = (function() {
     }
 
     async function checkMonitor() {
+        console.log('[MONITOR] 前端准备发送监控请求...');
         var status = document.getElementById('monitor-status');
         var results = document.getElementById('monitor-results');
         var timestamp = document.getElementById('monitor-timestamp');
 
         if (status) status.innerHTML = '⏳ 查询中...';
         try {
+            console.log('[MONITOR] 正在请求 /api/monitor ...');
             var resp = await fetch('/api/monitor', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({})
             });
             var data = await resp.json();
+            console.log('[MONITOR] 收到响应，状态码:', resp.status, '数据长度:', JSON.stringify(data).length);
             if (resp.ok) {
                 if (status) status.innerHTML = '✅ 检查完成';
                 if (timestamp) timestamp.innerText = data.timestamp || '';
@@ -262,6 +271,15 @@ var DoubaoWorkbench = (function() {
 
     function displayMonitorResults(container, data) {
         if (!container) return;
+        if (data && data.reply) {
+            if (typeof marked !== 'undefined') {
+                container.innerHTML = marked.parse(data.reply);
+            } else {
+                container.innerHTML = data.reply.replace(/\\n/g, '<br>');
+            }
+            return;
+        }
+        //兼容老数据
         var html = '';
         var signals = (data && data.signals) ? data.signals : [];
         var summary = (data && data.summary) ? data.summary : '';

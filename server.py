@@ -166,6 +166,7 @@ class ReplayHandler(SimpleHTTPRequestHandler):
 
         # ========== 监控 ==========
         if self.path == '/api/monitor':
+            print("[MONITOR] 收到前端监控请求")
             try:
                 run_collector('get_index_only.py')
                 run_collector('get_subscription_data.py')
@@ -183,25 +184,13 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                         parsed['timestamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         self.send_json(200, parsed)
                     else:
-                        self.send_json(200, {"signals": [], "summary": reply[:200]})
+                        self.send_json(200, {"reply": reply})
                 except:
-                    self.send_json(200, {"signals": [], "summary": reply[:200]})
+                    self.send_json(200, {"reply": reply})
             except Exception as e:
                 logging.error(f"监控错误: {e}")
                 self.send_json(500, {'error': str(e)})
             return
-
-        # ========== 手动采集 ==========
-        if self.path == '/api/collect':
-            try:
-                for s in CONFIG.get('collectors', {}):
-                    run_collector(s, force=True)
-                self.send_json(200, {'message': '采集完成'})
-            except Exception as e:
-                self.send_json(500, {'error': str(e)})
-            return
-
-        self.send_error(404)
 
     def send_json(self, code, data):
         self.send_response(code)
