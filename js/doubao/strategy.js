@@ -149,7 +149,7 @@ var DoubaoWorkbench = (function() {
         status.innerHTML = '⏳ 正在生成策略...';
         output.style.display = 'none';
 
-        var requestBody = { force: true };
+        var requestBody = { force: false };
         if (customPrompt) {
             requestBody.custom_prompt = customPrompt;
         }

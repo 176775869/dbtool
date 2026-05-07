@@ -122,7 +122,7 @@ class ReplayHandler(SimpleHTTPRequestHandler):
 
             # 复盘前强制全量采集
             for s, interval in CONFIG.get('collectors', {}).items():
-                if should_collect(s, interval, force=True):
+                if should_collect(s, interval, force=False):
                     run_collector(s, force=True)
             # build_prompt 返回 (system_prompt, user_prompt) 元组
             prompt_tuple = build_prompt('replay', extra_note=cp)
