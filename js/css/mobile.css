@@ -1,0 +1,131 @@
+/* ==========================================
+   移动端适配样式（宽度 ≤ 1024px 时生效）
+   覆盖手机竖屏、横屏，以及小尺寸平板
+   不影响桌面端原有布局
+   ========================================== */
+
+@media (max-width: 1024px) {
+    /* 让所有容器不超过屏幕宽度 */
+    body {
+        overflow-x: hidden;
+        font-size: 13px;
+    }
+
+    /* Canvas 画布自适应 */
+    #drawing {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100%;
+    }
+
+    /* 表格宽度与画布保持一致 */
+    #tbl {
+        width: 100% !important;
+        max-width: 100%;
+        table-layout: auto;
+        word-break: break-all;
+        font-size: 11px;
+    }
+
+    /* 表格内边距压缩 */
+    #tbl th,
+    #tbl td {
+        padding: 4px 6px;
+        white-space: normal;
+    }
+
+    #tbl thead th {
+        font-size: 10px;
+        letter-spacing: -0.5px;
+    }
+
+    /* 涨停表格：隐藏手机上不需要的列（按列序号，隐藏第3/6/7/8/9列） */
+    #tbl th:nth-child(11),
+    #tbl td:nth-child(11),
+    #tbl th:nth-child(12),
+    #tbl td:nth-child(12) {
+        display: none;
+    }
+
+    /* 表格区域可以横向滚动，避免撑破布局 */
+    #tbl {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 工作台面板占满屏幕 */
+    #doubao-workbench {
+        width: calc(100vw - 16px) !important;
+        height: calc(100vh - 120px) !important;
+        top: 60px !important;
+        left: 8px !important;
+        right: 8px !important;
+    }
+
+    /* 工作台内部的标签按钮紧凑布局 */
+    .wb-tabs {
+        flex-wrap: wrap;
+    }
+    .wb-tab {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    /* 策略生成面板的按钮换行 */
+    .doubao-actions {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .btn-generate {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    /* custom-prompt 输入框宽度自适应 */
+    #custom-prompt-input {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 6px;
+    }
+
+    /* 监控面板间隔选择器 */
+    #monitor-interval {
+        margin-left: 4px;
+        padding: 4px 6px;
+        font-size: 12px;
+    }
+
+    /* 右上角浮动按钮缩小 */
+    #wb-toggle-btn {
+        width: 36px !important;
+        height: 36px !important;
+        top: 10px !important;
+        right: 10px !important;
+        font-size: 16px !important;
+    }
+
+    /* 聊天输入区域 */
+    #chat-input-area {
+        flex-direction: column;
+    }
+    #chat-input {
+        width: 100%;
+        margin-bottom: 4px;
+    }
+    #chat-send-btn {
+        width: 100%;
+    }
+}
+
+/* 横屏时的高度微调 */
+@media (max-width: 1024px) and (orientation: landscape) {
+    #doubao-workbench {
+        height: calc(100vh - 80px) !important;
+        top: 40px !important;
+    }
+    #wb-toggle-btn {
+        top: 6px !important;
+        right: 6px !important;
+    }
+}
