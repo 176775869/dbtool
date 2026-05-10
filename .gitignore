@@ -44,6 +44,8 @@ py/config/custom_prompt.txt
 py/data/feeds/
 server.log
 py/config/evolution_log.txt
+py/config/evolution_log.ser.txt
+
 tmp.sh
 
 服务器-*.bat
