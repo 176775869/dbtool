@@ -147,7 +147,7 @@ def build_prompt(scene='replay', extra_note=None):
         save_evolution_note(extra_note)
 
     # ---- 构建 System Prompt（角色设定 + 系统提示 + 所有预加载数据） ----
-    system_prompt = sc.get('system_prompt', '你是一个专业的交易分析助手。')
+    system_prompt = sc.get('system_prompt', '')
     system_prompt += '\n\n' + get_system_note()
 
     # 监控场景注入盘中时间

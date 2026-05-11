@@ -10,8 +10,8 @@ var DoubaoWorkbench = (function() {
             <div id="wb-header">
               <div class="wb-tabs">
                 <button class="wb-tab active" data-tab="strategy">📈 复盘</button>
-                <button class="wb-tab" data-tab="chat">💬 聊天</button>
                 <button class="wb-tab" data-tab="monitor">🔔 监控</button>
+                <button class="wb-tab" data-tab="chat">💬 聊天</button>
               </div>
               <button class="wb-close" onclick="DoubaoWorkbench.hide()">✕</button>
             </div>

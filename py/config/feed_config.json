@@ -14,14 +14,13 @@
     "market_context_builder.py": 300
   },
   "replay": {
-    "system_prompt": "你是一个严格遵循《豆包模式规则手册》的首席策略分析师。你必须逐条执行评分流程，不得自创评分方式。取最强中军作为评分依据，严禁取平均或最差。",
+    "system_prompt": "你是一个严格遵循豆包模式规则的策略执行引擎。你的唯一任务是：\n1. 从 `【历史策略快照】` 中解析昨日全景表的最后一行，获取**当前状态标记、主线锚点方向及阶段、候选池方向及阶段**以及**主线锚点当前所处的阶段标记（如G2-4中的数字4）**，作为今日分析的起点。2. 严格使用以下“三、数据源规范”中指定的文件，**禁止使用任何外部知识或记忆**，按“四、复盘报告生成协议”的步骤顺序执行。3. 生成包含今日全景表的完整复盘报告。",
     "prompt_intro": "",
     "strategy_history_days": 1,
-    "max_limit_up": 200,
-    "max_qs_pool": 200,
+    "max_limit_up": 100,
+    "max_qs_pool": 50,
     "files": [
-      "md/豆包模式规则手册·投喂版.md",
-      "md/标杆策略案例库.md",
+      "md/豆包模式规则手册 · 执行协议 v2.1.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
       "AUTO_LATEST:sector_*.txt",
@@ -31,8 +30,7 @@
       "AUTO_LATEST:zhaban_*.txt",
       "AUTO_LATEST:limit_down_*.txt",
       "AUTO_LATEST:qs_pool_*.txt",
-      "AUTO_LATEST:market_context_*.txt",
-      "AUTO_LATEST:py/data/anchor_history.json"
+      "AUTO_LATEST:market_context_*.txt"
     ],
     "api_params": {
       "temperature": 0.1,
@@ -41,19 +39,18 @@
       "frequency_penalty": 0.0,
       "presence_penalty": 0.0
     },
-    "use_shared_memory": true,
+    "use_shared_memory": false,
     "max_memory_items": 40,
     "max_limit_down": 20,
     "max_zhaban": 20
   },
   "monitor": {
-    "system_prompt": "你是一个盘中实时监控助手。根据规则和今日市场数据，判断是否触发买卖点。早盘优先D2信号，尾盘优先D3信号。",
+    "system_prompt": "你是一个盘中实时监控助手。根据规则和今日市场数据，判断是否触发买卖点。",
     "prompt_intro": "",
-    "strategy_history_days": 0,
-    "max_limit_up": 30,
+    "max_limit_up": 100,
     "max_qs_pool": 50,
     "files": [
-      "md/豆包模式规则手册·投喂版.md",
+      "md/豆包模式规则手册 · 执行协议 v2.1.md",
       "AUTO_LATEST:strategy_*.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
@@ -74,20 +71,18 @@
     "max_zhaban": 10
   },
   "chat": {
-    "system_prompt": "你是用户在A股的咨询师，回复请尽量简洁精炼。",
+    "system_prompt": "你是一个专业的交易分析助手。",
     "prompt_intro": "",
-    "strategy_history_days": 1,
     "files": [
-      "md/豆包模式v3.7.19.md"
     ],
     "api_params": {
       "temperature": 0.6,
-      "max_tokens": 800,
+      "max_tokens": 4096,
       "top_p": 0.9,
       "frequency_penalty": 0.3,
       "presence_penalty": 0.2
     },
-    "use_shared_memory": true,
+    "use_shared_memory": false,
     "max_memory_items": 40
   }
 }
