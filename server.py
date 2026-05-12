@@ -92,6 +92,7 @@ class ReplayHandler(SimpleHTTPRequestHandler):
         # ========== 聊天 ==========
         if self.path == '/api/chat':
             msg = data.get('message', '').strip()
+            history = data.get('history', [])          
             if not msg:
                 self.send_json(400, {'error': '消息为空'})
                 return
@@ -102,7 +103,8 @@ class ReplayHandler(SimpleHTTPRequestHandler):
             reply = call_with_memory('chat', prompt_tuple,
                           use_memory=CONFIG.get('chat', {}).get('use_shared_memory', True),
                           max_memory_items=CONFIG.get('chat', {}).get('max_memory_items', 40),
-                          memory_content=msg)
+                          memory_content=msg, 
+                          history=history)
             print(f"[Token] 聊天 | 用户 {len(msg)}字符 | 预估token ~{len(msg)//2}")
             self.send_json(200, {'reply': reply})
             return
@@ -129,7 +131,8 @@ class ReplayHandler(SimpleHTTPRequestHandler):
             reply = call_with_memory('replay', prompt_tuple,
                           use_memory=CONFIG.get('replay', {}).get('use_shared_memory', True),
                           max_memory_items=CONFIG.get('replay', {}).get('max_memory_items', 40),
-                          memory_content=cp if cp else '自动复盘')
+                          memory_content=cp if cp else '自动复盘',
+                          history=None)
             print(f"[Token] 复盘 | 用户 {len(prompt_tuple[1]) if isinstance(prompt_tuple, tuple) else len(prompt_tuple)}字符")
 
             today = datetime.now().strftime('%Y%m%d')
@@ -151,7 +154,8 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                 reply = call_with_memory('monitor', prompt_tuple,
                           use_memory=False,
                           max_memory_items=0,
-                          memory_content=None)
+                          memory_content=None,
+                          history=None)
                 user_len = len(prompt_tuple[1]) if isinstance(prompt_tuple, tuple) else len(prompt_tuple)
                 print(f"[Token] 监控 | 用户 {user_len}字符 | 预估token ~{user_len//2}")
                 try:

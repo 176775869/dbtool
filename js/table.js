@@ -8,7 +8,6 @@ var table = (function(){
 	
 	var datetoload;   // load date
 	var param;        // load param
-	var highlightTichets;  // highlight
 	
 	var btn_loadMore = document.getElementById('load-all-btn');
 	var load_item_num = 20;
@@ -274,14 +273,6 @@ var table = (function(){
 					default:
 						break;
 					} 
-					
-				if(highlightTichets) {
-					highlightTichets.forEach((t)=>{
-						if(t[Configure.title.code] == ticket[Configure.title.code]) {
-							tr.className = 'highlight';
-						}
-					})
-				}
 				tr.appendChild(td);
 			});
 			addDetailAndDelete(tr, ticket);

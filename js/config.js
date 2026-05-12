@@ -20,10 +20,11 @@ var Configure = (function(){
 	};
 	var version = 'dev';
 	var date = new Date();
-	var mode;       // 0 复盘模式， 1 盯盘模式
+	var mode;       // 0 复盘模式， 1 盯盘模式, 2 移动端
 	var modeType = {
 		FP: 0,
 		DP: 1,
+		MB: 2,
 	}
     
     // echelon 
@@ -713,7 +714,7 @@ var Configure = (function(){
 									
 			this.WinXFactor = 0.6;
 			this.Echelons_Draw_NUM = 2;   
-		} else  {                      // 盯盘配置
+		} else if(mode == modeType.DP)   {                      // 盯盘配置
 			this.showInTableTitile = ['name', 'f2',  'f3','f8','f6','realValue','score','totalDivergence', 
 							'boardStrength','reason', 'boardAndDay'];
 			this.bandShowInTableTitile = ['name', 'f2', 'f3','f8','f6','realValue','score','totalDivergence',
@@ -722,6 +723,15 @@ var Configure = (function(){
 											'rise_20', 'value','gainianDragon'];
 			this.WinXFactor = 0.3;
 			this.Echelons_Draw_NUM = 1;
+		} else {
+			this.showInTableTitile = ['name','realValue', 'score','boardTime','reason', 'boardAndDay'];
+			this.bandShowInTableTitile = ['name', 'realValue','price','increaseRate',
+							'selectDate','reason'];
+			this.rankShowInTableTitile = ['index', 'name', 'rise_1', 'rise_5',
+									'rise_20', 'value'];
+									
+			this.WinXFactor = 1;
+			this.Echelons_Draw_NUM = 0;   
 		}
 	};
 	var getMode = function() {

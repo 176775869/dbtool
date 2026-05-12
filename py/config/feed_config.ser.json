@@ -20,7 +20,7 @@
     "max_limit_up": 30,
     "max_qs_pool": 30,
     "files": [
-      "md/豆包模式规则手册 · 执行协议 v2.1.md",
+      "md/豆包模式规则手册 · 执行协议 v3.0.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
       "AUTO_LATEST:sector_*.txt",
@@ -50,7 +50,7 @@
     "max_limit_up": 100,
     "max_qs_pool": 50,
     "files": [
-      "md/豆包模式规则手册 · 执行协议 v2.1.md",
+      "md/豆包模式规则手册 · 执行协议 v3.0.md",
       "AUTO_LATEST:strategy_*.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",

@@ -72,7 +72,7 @@ def compress_assistant_reply(reply_text, scene):
 
 def call_with_memory(scene, user_content, temperature=0.1, max_tokens=8192,
                      use_memory=True, max_memory_items=DEFAULT_MAX_MEMORY,
-                     memory_content=None):
+                     memory_content=None, history=None):
     from dotenv import load_dotenv
     load_dotenv()
     api_key = os.environ.get('DEEPSEEK_API_KEY', '')
@@ -96,6 +96,10 @@ def call_with_memory(scene, user_content, temperature=0.1, max_tokens=8192,
     messages = [{"role": "system", "content": system_prompt}]
     if memory:
         messages += memory
+    if history:                       # ← 插入前端传来的对话历史
+        for msg in history:
+            if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                messages.append(msg)
     messages.append({"role": "user", "content": actual_user_content})
 
     try:

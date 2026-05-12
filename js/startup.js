@@ -41,7 +41,6 @@ var startup = (function(text) {
 				document.getElementById('showdays').value);
 	};
 
-	var highlightTichets;
 	var drawCanvasRight = function(){
 		var elCanvas = document.getElementById("drawing");
 		var rtCanvasFactor = 0;
@@ -72,9 +71,6 @@ var startup = (function(text) {
 				e1 = new window.bandEchelon(elCanvas, echelons[i], rect);
 			}
 			e1.draw();
-			if (i == 0) {
-				highlightTichets = e1.getTickets();
-			}
 			if (workbook.getBandTickets().length == 0) {
 				new window.bandEchelon(elCanvas, echelons[i], rect);
 			}
@@ -111,7 +107,7 @@ var startup = (function(text) {
 			other: fr2.all[1].checked,
 			sector:(fr3.sector[0].checked << 0) | (fr3.sector[1].checked << 1) | (fr3.sector[2].checked << 2)
 		};
-		table.createTable(d, param, highlightTichets);
+		table.createTable(d, param);
 	};
 
 	var init = function() {
@@ -323,7 +319,6 @@ var startup = (function(text) {
 
 		window.onload = function(){
 			// 在线模式自动从服务端加载 Excel 文件
-			// 在线模式自动从服务端加载 Excel 文件
 			if (isOnline) {
 				console.log('[WORKBOOK] 在线模式，开始自动加载 Excel...');
 				document.querySelector('.loader-container').style.display = 'block';
@@ -365,20 +360,6 @@ var startup = (function(text) {
                     excelInput.title = '在线模式，文件自动加载';
                 }
 			}
-
-			var fp = function() {
-				document.getElementById('form1').gtype[0].checked = true;
-				document.getElementById('form1').sort[2].checked = true;
-				document.getElementById('showdays').value = 60;
-				document.getElementById('rtShowdays').hidden = true;
-			};
-			var dp = function() {
-				document.getElementById('form1').gtype[2].checked = true;
-				document.getElementById('form1').sort[0].checked = true;
-				document.getElementById('showdays').value = 30;
-				document.getElementById('rtShowdays').hidden = false;
-			};
-
 			var updateIndicator = function() {
 				var indecator = document.getElementById('indecator');
 				var options = indecator.getElementsByTagName("option");
@@ -393,15 +374,9 @@ var startup = (function(text) {
 					indecator.appendChild(option1);
 				}
 			};
-			if(Configure.isAfterTrading() || Configure.isWeekend()){
-				fp()
-			} else {
-				dp();
-			}
-			Configure.setMode($('#mode')[0].value);
+			Configure.setMode(mobile.isMobile() ? Configure.modeType.MB : $('#mode')[0].value);
 			$('#mode').change((e)=>{
-				Configure.setMode($('#mode')[0].value);
-				Configure.getMode() == Configure.modeType.DP ? dp() : fp();
+				Configure.setMode(mobile.isMobile() ? Configure.modeType.MB : $('#mode')[0].value);
 				updateIndicator();
 			});
 

@@ -18,9 +18,9 @@
     "prompt_intro": "",
     "strategy_history_days": 1,
     "max_limit_up": 100,
-    "max_qs_pool": 50,
+    "max_qs_pool": 100,
     "files": [
-      "md/豆包模式规则手册 · 执行协议 v2.1.md",
+      "md/豆包模式规则手册 · 执行协议 v3.0.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
       "AUTO_LATEST:sector_*.txt",
@@ -48,9 +48,9 @@
     "system_prompt": "你是一个盘中实时监控助手。根据规则和今日市场数据，判断是否触发买卖点。",
     "prompt_intro": "",
     "max_limit_up": 100,
-    "max_qs_pool": 50,
+    "max_qs_pool": 100,
     "files": [
-      "md/豆包模式规则手册 · 执行协议 v2.1.md",
+      "md/豆包模式规则手册 · 执行协议 v3.0.md",
       "AUTO_LATEST:strategy_*.md",
       "AUTO_LATEST:index_data_*.txt",
       "AUTO_LATEST:limit_up_*.txt",
@@ -71,7 +71,7 @@
     "max_zhaban": 10
   },
   "chat": {
-    "system_prompt": "你是一个专业的交易分析助手。",
+    "system_prompt": "",
     "prompt_intro": "",
     "files": [
     ],
