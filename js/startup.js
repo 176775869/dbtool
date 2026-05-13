@@ -218,16 +218,17 @@ var startup = (function(text) {
 				case 's': document.getElementById('form1').sort[0].click(); break;
 				case 'h': document.getElementById('form1').sort[1].click(); break;
 				case 'r': document.getElementById('form1').sort[2].click(); break;
-				case 'ArrowDown': nextOption('rtShowdays'); event.preventDefault(); break;
-				case 'ArrowUp': nextOption('rtShowdays', true); event.preventDefault(); break;
-				case 'ArrowRight': document.getElementById('next').click(); event.preventDefault(); break;
-				case 'ArrowLeft': document.getElementById('pre').click(); event.preventDefault(); break;
+				case 'ArrowDown': nextOption('rtShowdays'); break;
+				case 'ArrowUp': nextOption('rtShowdays', true);  break;
+				case 'ArrowRight': document.getElementById('next').click(); break;
+				case 'ArrowLeft': document.getElementById('pre').click();  break;
 				case 'Escape': document.getElementById('last').click(); break;
-				case 'Enter': nextOption('indecator'); event.preventDefault(); break;
-				case 'Tab': nextOption('showdays'); event.preventDefault(); break;
+				case 'Enter': nextOption('indecator'); break;
+				case 'Tab': nextOption('showdays');  break;
 				case 'F1': document.getElementById('cailianshe').click(); event.preventDefault(); break;
 				case 'F2': document.getElementById('jiuyan').click(); event.preventDefault(); break;
 				case 'F3': document.getElementById('taogu').click(); event.preventDefault(); break;
+				case 'F4': document.getElementById('wb-toggle-btn').click(); event.preventDefault(); break;
 			}
 		}
 

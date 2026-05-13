@@ -328,7 +328,9 @@ var DoubaoWorkbench = (function() {
             var reply = data.reply || '无响应';
             messagesDiv.innerHTML += '<div class="chat-message ai">' + (typeof marked !== 'undefined' ? marked.parse(reply) : reply) + '</div>';
             chatHistory.push({role:'assistant', content:reply});
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            requestAnimationFrame(() => {
+				messagesDiv.scrollTop = messagesDiv.scrollHeight;
+			});
         } catch(e) {
             messagesDiv.innerHTML += '<div class="chat-message ai">❌ 出错</div>';
         }
