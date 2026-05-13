@@ -106,3 +106,60 @@
     background: linear-gradient(135deg, transparent 50%, #bbb 50%);
     border-radius: 0 0 10px 0;
 }
+
+/* ===== 字体优化（不改颜色） ===== */
+
+/* 策略正文 */
+#doubao-strategy {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #1a1a1a;
+}
+
+/* 状态提示 */
+#doubao-status {
+    font-size: 14px;
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+/* 聊天消息 */
+.chat-message {
+    font-size: 16px;
+    line-height: 1.6;
+}
+.chat-message.user {
+    color: #1a1a1a;
+}
+.chat-message.ai {
+    color: #1a1a1a;
+}
+
+/* 按钮 */
+.btn-generate,
+#chat-send-btn {
+    font-size: 14px;
+}
+
+/* 标签 */
+.wb-tab {
+    font-size: 15px;
+}
+
+/* 输入框 */
+#custom-prompt-input,
+#chat-input {
+    font-size: 16px;
+    color: #1a1a1a;
+}
+
+/* 监控结果 */
+#monitor-results {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #1a1a1a;
+}
+#monitor-status {
+    font-size: 16px;
+    color: #1a1a1a;
+}

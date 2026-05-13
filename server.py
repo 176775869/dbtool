@@ -16,7 +16,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(0, os.path.join(BASE_DIR, 'py', 'core'))
 from prompt_builder import build_prompt
-from memory_manager import call_with_memory
+from memory_manager import call_with_memory, call_with_memory_stream
 from collector_scheduler import should_collect
 
 CONFIG_PATH = os.path.join(BASE_DIR, 'py', 'config', 'feed_config.json')
@@ -93,21 +93,33 @@ class ReplayHandler(SimpleHTTPRequestHandler):
         if self.path == '/api/chat':
             msg = data.get('message', '').strip()
             history = data.get('history', [])          
+            use_stream = data.get('stream', False)
             if not msg:
                 self.send_json(400, {'error': '消息为空'})
                 return
 
-            # build_prompt 返回 (system_prompt, user_prompt) 元组
             prompt_tuple = build_prompt('chat')
-            # 把元组作为 user_content 传给 call_with_memory
-            reply = call_with_memory('chat', prompt_tuple,
-                          use_memory=CONFIG.get('chat', {}).get('use_shared_memory', True),
-                          max_memory_items=CONFIG.get('chat', {}).get('max_memory_items', 40),
-                          memory_content=msg, 
-                          history=history)
-            print(f"[Token] 聊天 | 用户 {len(msg)}字符 | 预估token ~{len(msg)//2}")
-            self.send_json(200, {'reply': reply})
-            return
+            if use_stream:
+                self.start_stream()
+                gen = call_with_memory_stream('chat', prompt_tuple,
+                              use_memory=CONFIG.get('chat', {}).get('use_shared_memory', True),
+                              max_memory_items=CONFIG.get('chat', {}).get('max_memory_items', 40),
+                              memory_content=msg,
+                              history=history)
+                for chunk in gen:
+                    self.wfile.write(f"data: {json.dumps({'chunk': chunk})}\n\n".encode('utf-8'))
+                    self.wfile.flush()
+                self.wfile.write(b"data: [DONE]\n\n")
+                return
+            else:
+                reply = call_with_memory('chat', prompt_tuple,
+                              use_memory=CONFIG.get('chat', {}).get('use_shared_memory', True),
+                              max_memory_items=CONFIG.get('chat', {}).get('max_memory_items', 40),
+                              memory_content=msg,
+                              history=history)
+                print(f"[Token] 聊天 | 用户 {len(msg)}字符 | 预估token ~{len(msg)//2}")
+                self.send_json(200, {'reply': reply})
+                return
 
         # ========== 策略生成 ==========
         if self.path == '/api/generate':
@@ -172,6 +184,14 @@ class ReplayHandler(SimpleHTTPRequestHandler):
                 logging.error(f"监控错误: {e}")
                 self.send_json(500, {'error': str(e)})
             return
+
+    def start_stream(self):
+        """开始 SSE 流式响应"""
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/event-stream; charset=utf-8')
+        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
 
     def send_json(self, code, data):
         self.send_response(code)

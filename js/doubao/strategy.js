@@ -318,22 +318,73 @@ var DoubaoWorkbench = (function() {
         var msg = input.value.trim();
         if (!msg) return;
         var messagesDiv = document.getElementById('chat-messages');
-        messagesDiv.innerHTML += '<div class="chat-message user">' + msg + '</div>';
+        messagesDiv.innerHTML += '<div class="chat-message user">' + escapeHtml(msg) + '</div>';
         input.value = '';
         chatHistory.push({role:'user', content:msg});
+
+        // 创建 AI 消息容器
+        var aiMsgDiv = document.createElement('div');
+        aiMsgDiv.className = 'chat-message ai';
+        aiMsgDiv.textContent = '';
+        messagesDiv.appendChild(aiMsgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
         try {
-            var resp = await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:msg, history:chatHistory.slice(-6)}) });
-            var data = await resp.json();
-            console.log('[MONITOR] 收到响应，状态码:', resp.status, '数据长度:', JSON.stringify(data).length);
-            var reply = data.reply || '无响应';
-            messagesDiv.innerHTML += '<div class="chat-message ai">' + (typeof marked !== 'undefined' ? marked.parse(reply) : reply) + '</div>';
-            chatHistory.push({role:'assistant', content:reply});
-            requestAnimationFrame(() => {
-				messagesDiv.scrollTop = messagesDiv.scrollHeight;
-			});
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg, history: chatHistory.slice(-6), stream: true })
+            });
+            if (!response.ok) throw new Error('请求失败');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let fullReply = '';
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                let lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (let line of lines) {
+                    if (line.startsWith('data: ')) {
+                        let data = line.slice(6);
+                        if (data === '[DONE]') continue;
+                        try {
+                            let json = JSON.parse(data);
+                            if (json.chunk) {
+                                fullReply += json.chunk;
+                                aiMsgDiv.textContent = fullReply;
+                                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                            }
+                        } catch(e) {}
+                    }
+                }
+            }
+
+            // 最终渲染 Markdown
+            if (typeof marked !== 'undefined') {
+                aiMsgDiv.innerHTML = marked.parse(fullReply);
+            } else {
+                aiMsgDiv.innerHTML = fullReply.replace(/\n/g, '<br>');
+            }
+            chatHistory.push({role:'assistant', content: fullReply});
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         } catch(e) {
-            messagesDiv.innerHTML += '<div class="chat-message ai">❌ 出错</div>';
+            aiMsgDiv.textContent = '❌ 出错: ' + e.message;
         }
+    }
+
+    // 辅助函数：转义 HTML 防止 XSS
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
 
     // --- 盘中监控相关函数（手动控制版） ---

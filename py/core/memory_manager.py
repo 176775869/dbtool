@@ -144,3 +144,100 @@ def call_with_memory(scene, user_content, temperature=0.1, max_tokens=8192,
     except Exception as e:
         print(f"[memory] 调用异常: {e}")
         return f"调用异常: {str(e)}"
+
+
+def call_with_memory_stream(scene, user_content, temperature=0.1, max_tokens=8192,
+                            use_memory=True, max_memory_items=DEFAULT_MAX_MEMORY,
+                            memory_content=None, history=None):
+    '''
+    流式版本的 call_with_memory，返回生成器，每次 yield 一个文本块。
+    记忆的保存会在完整回复生成后进行。
+    '''
+    from dotenv import load_dotenv
+    load_dotenv()
+    api_key = os.environ.get('DEEPSEEK_API_KEY', '')
+    if not api_key:
+        yield "[错误] 未配置 DEEPSEEK_API_KEY"
+        return
+
+    # 监控场景只读不写
+    if scene == 'monitor':
+        memory = load_memory()
+        use_memory = False
+    else:
+        memory = load_memory() if use_memory else []
+
+    # 分离 system 和 user
+    system_prompt = ""
+    actual_user_content = user_content
+    if isinstance(user_content, tuple) and len(user_content) == 2:
+        system_prompt = user_content[0]
+        actual_user_content = user_content[1]
+
+    messages = [{"role": "system", "content": system_prompt}]
+    if memory:
+        messages += memory
+    if history:
+        for msg in history:
+            if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                messages.append(msg)
+    messages.append({"role": "user", "content": actual_user_content})
+
+    try:
+        from prompt_builder import load_config
+        try:
+            cfg = load_config().get(scene, {}).get('api_params', {})
+        except:
+            cfg = {}
+        temp = cfg.get('temperature', temperature)
+        tokens = cfg.get('max_tokens', max_tokens)
+        top_p_val = cfg.get('top_p', 0.9)
+        freq_pen = cfg.get('frequency_penalty', 0.0)
+        pres_pen = cfg.get('presence_penalty', 0.0)
+
+        resp = req.post('https://api.deepseek.com/chat/completions',
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+            json={
+                'model': 'deepseek-chat',
+                'messages': messages,
+                'temperature': temp,
+                'max_tokens': tokens,
+                'top_p': top_p_val,
+                'frequency_penalty': freq_pen,
+                'presence_penalty': pres_pen,
+                'stream': True
+            },
+            stream=True,
+            timeout=300
+        )
+        if resp.status_code != 200:
+            yield f"API 调用失败: {resp.text[:200]}"
+            return
+
+        full_reply = ""
+        for chunk in resp.iter_lines():
+            if not chunk:
+                continue
+            chunk = chunk.decode('utf-8')
+            if chunk.startswith('data: '):
+                chunk = chunk[6:]
+            if chunk == '[DONE]':
+                break
+            try:
+                data = json.loads(chunk)
+                delta = data['choices'][0]['delta'].get('content', '')
+                if delta:
+                    full_reply += delta
+                    yield delta
+            except:
+                continue
+
+        # 保存记忆
+        if use_memory:
+            user_for_memory = memory_content if memory_content is not None else compress_user_content(actual_user_content)
+            memory.append({"role": "user", "content": user_for_memory})
+            memory.append({"role": "assistant", "content": compress_assistant_reply(full_reply, scene)})
+            save_memory(memory, max_memory_items)
+
+    except Exception as e:
+        yield f"调用异常: {str(e)}"
