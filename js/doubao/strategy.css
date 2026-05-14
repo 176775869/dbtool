@@ -125,7 +125,7 @@
 
 /* 聊天消息 */
 .chat-message {
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.6;
 }
 .chat-message.user {
@@ -162,4 +162,50 @@
 #monitor-status {
     font-size: 16px;
     color: #1a1a1a;
+}
+
+/* ===== 聊天消息间距与图标优化 ===== */
+.chat-message {
+    margin-bottom: 16px;
+    padding: 10px 14px 10px 42px;  /* 左边留出图标空间 */
+    border-radius: 8px;
+    position: relative;
+    min-height: 36px;
+    clear: both;
+    color: #1a1a1a;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* 用户消息：浅绿背景，靠右，图标在右边 */
+.chat-message.user {
+    background: #e8f5e9;
+    margin-left: 50px;
+    text-align: left;
+    padding-right: 42px;   /* 右边留出图标空间 */
+    padding-left: 14px;
+}
+.chat-message.user::after {
+    content: "💬";
+    position: absolute;
+    right: 10px;
+    top: 8px;
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* AI 消息：白色背景，靠左，图标在左边 */
+.chat-message.ai {
+    background: #ffffff;
+    margin-right: 50px;
+    text-align: left;
+    border: 1px solid #e0e0e0;
+}
+.chat-message.ai::before {
+    content: "🤖";
+    position: absolute;
+    left: 10px;
+    top: 8px;
+    font-size: 20px;
+    line-height: 1;
 }

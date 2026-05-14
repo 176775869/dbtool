@@ -7,7 +7,7 @@ var DoubaoWorkbench = (function() {
     var strategyLoaded = false;          // 是否已自动加载过策略
     var protocolShown = false;          // 聊天页是否已显示过执行文档
 
-    // 当前策略的原始 Markdown 文本（用于复制）
+    // 当前策略的原始 Markdown 文本（用于复制和发送）
     var currentStrategyMd = '';
 
     // ===== 协议配置（统一维护） =====
@@ -46,7 +46,10 @@ var DoubaoWorkbench = (function() {
 					<button class="btn-generate" id="btn-generate-strategy">⚡ 生成</button>
 				</div>
                 <div id="doubao-status"></div>
-                <button id="btn-copy-strategy" style="display:none; margin-bottom:6px; padding:4px 10px; font-size:13px; border:1px solid #ccc; border-radius:4px; background:#f8f9fa; cursor:pointer;">📋 复制内容</button>
+                <div id="strategy-actions" style="display:none; margin-bottom:6px;">
+                    <button id="btn-copy-strategy" title="复制原始Markdown" style="padding:2px 6px; margin-right:4px; border:1px solid #ccc; border-radius:3px; background:#f8f9fa; cursor:pointer; font-size:12px;">📋</button>
+                    <button id="btn-send-to-chat" title="发送到聊天窗口" style="padding:2px 6px; border:1px solid #ccc; border-radius:3px; background:#f8f9fa; cursor:pointer; font-size:12px;">💬</button>
+                </div>
                 <div id="doubao-strategy" style="min-height:500px; overflow-y:auto;"></div>
               </div>
               <div id="tab-chat" class="wb-panel">
@@ -140,6 +143,8 @@ var DoubaoWorkbench = (function() {
 
         // 复制按钮事件
         $('#btn-copy-strategy').on('click', copyStrategyContent);
+        // 发送到聊天按钮事件
+        $('#btn-send-to-chat').on('click', sendStrategyToChat);
 
         // 聊天发送事件
         $('#chat-send-btn').on('click', sendChat);
@@ -206,7 +211,7 @@ var DoubaoWorkbench = (function() {
         var output = document.getElementById('doubao-strategy');
         status.innerHTML = '⏳ 加载...';
         output.style.display = 'none';
-        document.getElementById('btn-copy-strategy').style.display = 'none';
+        document.getElementById('strategy-actions').style.display = 'none';
         try {
             var resp = await fetch('/api/generate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({force:false}) });
             var data = await resp.json();
@@ -227,7 +232,7 @@ var DoubaoWorkbench = (function() {
 
         status.innerHTML = '⏳ 正在生成策略...';
         output.style.display = 'none';
-        document.getElementById('btn-copy-strategy').style.display = 'none';
+        document.getElementById('strategy-actions').style.display = 'none';
 
         var requestBody = { force: false };
         if (customPrompt) {
@@ -262,9 +267,9 @@ var DoubaoWorkbench = (function() {
             container.innerHTML = mdText.replace(/\n/g, '<br>');
         }
         container.style.display = 'block';
-        // 保存原始 Markdown 文本，以便复制
+        // 保存原始 Markdown 文本，以便复制和发送
         currentStrategyMd = mdText;
-        document.getElementById('btn-copy-strategy').style.display = 'inline-block';
+        document.getElementById('strategy-actions').style.display = 'block';
     }
 
     // 复制策略内容到剪贴板
@@ -278,8 +283,8 @@ var DoubaoWorkbench = (function() {
                 var btn = document.getElementById('btn-copy-strategy');
                 if (btn) {
                     var origText = btn.innerHTML;
-                    btn.innerHTML = '✅ 已复制';
-                    setTimeout(function() { btn.innerHTML = origText; }, 1500);
+                    btn.innerHTML = '✅';
+                    setTimeout(function() { btn.innerHTML = '📋'; }, 1500);
                 }
             }).catch(function(err) {
                 console.warn('复制失败，尝试降级方案:', err);
@@ -302,13 +307,45 @@ var DoubaoWorkbench = (function() {
             var btn = document.getElementById('btn-copy-strategy');
             if (btn) {
                 var origText = btn.innerHTML;
-                btn.innerHTML = '✅ 已复制';
-                setTimeout(function() { btn.innerHTML = origText; }, 1500);
+                btn.innerHTML = '✅';
+                setTimeout(function() { btn.innerHTML = '📋'; }, 1500);
             }
         } catch (err) {
             console.error('复制失败:', err);
         } finally {
             document.body.removeChild(textarea);
+        }
+    }
+
+    // 将策略内容直接发送到聊天窗口
+    function sendStrategyToChat() {
+        var textToSend = currentStrategyMd;
+        if (!textToSend) return;
+
+        var messagesDiv = document.getElementById('chat-messages');
+        // 将当前策略作为助手消息直接渲染到聊天区（保留Markdown格式）
+        var msgDiv = document.createElement('div');
+        msgDiv.className = 'chat-message ai';
+        if (typeof marked !== 'undefined') {
+            msgDiv.innerHTML = marked.parse(textToSend);
+        } else {
+            msgDiv.innerHTML = textToSend.replace(/\n/g, '<br>');
+        }
+        messagesDiv.appendChild(msgDiv);
+
+        // 同时将策略内容加入到对话历史，方便后续AI引用
+        chatHistory.push({role:'user', content: '请基于以下复盘报告，回答我的问题：\n\n' + textToSend});
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // 自动切换到聊天面板
+        $(panel).find('.wb-tab[data-tab="chat"]').click();
+
+        // 按钮临时反馈
+        var btn = document.getElementById('btn-send-to-chat');
+        if (btn) {
+            var origHtml = btn.innerHTML;
+            btn.innerHTML = '✅';
+            setTimeout(function() { btn.innerHTML = '💬'; }, 1500);
         }
     }
 
