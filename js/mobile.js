@@ -2,18 +2,23 @@
 
 var mobile = (function(){
 	function init() {
-		if(isMobile()) {
+		if(isMobilePortrait()) {
 			Configure.WinXFactor = 1;
 		}
 	}
 	
-	function isMobile() {
-	  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+	function isPortrait() {
+		return window.innerHeight > window.innerWidth;
+	}
+	
+	function isMobilePortrait() {
+	  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && 
+				isPortrait();
 	}
 	
 	return {
 		init:init,
-		isMobile:isMobile,
+		isMobilePortrait:isMobilePortrait,
 	}
 })();
 

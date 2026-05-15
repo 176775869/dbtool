@@ -210,33 +210,28 @@ var startup = (function(text) {
 			selectElement.dispatchEvent(event);
 		};
 
-		var keyBoardEvent = function(event) {
-			Configure.Debug('Keydown:', event.key);
-			switch(event.key) {
-				case '1': case '2': case '3':
-					document.getElementById('form1').gtype[event.key - 1].click(); break;
-				case 's': document.getElementById('form1').sort[0].click(); break;
-				case 'h': document.getElementById('form1').sort[1].click(); break;
-				case 'r': document.getElementById('form1').sort[2].click(); break;
-				case 'ArrowDown': nextOption('rtShowdays'); break;
-				case 'ArrowUp': nextOption('rtShowdays', true);  break;
-				case 'ArrowRight': document.getElementById('next').click(); break;
-				case 'ArrowLeft': document.getElementById('pre').click();  break;
-				case 'Escape': document.getElementById('last').click(); break;
-				case 'Enter': nextOption('indecator'); break;
-				case 'Tab': nextOption('showdays');  break;
-				case 'F1': document.getElementById('cailianshe').click(); event.preventDefault(); break;
-				case 'F2': document.getElementById('jiuyan').click(); event.preventDefault(); break;
-				case 'F3': document.getElementById('taogu').click(); event.preventDefault(); break;
-				case 'F4': document.getElementById('wb-toggle-btn').click(); event.preventDefault(); break;
-			}
-		}
+		EventManager.register('1', function() { document.getElementById('form1').gtype[0].click(); });
+		EventManager.register('2', function() { document.getElementById('form1').gtype[1].click(); });
+		EventManager.register('3', function() { document.getElementById('form1').gtype[2].click(); });
+		EventManager.register('s', function() { document.getElementById('form1').sort[0].click(); });
+		EventManager.register('h', function() { document.getElementById('form1').sort[1].click(); });
+		EventManager.register('r', function() { document.getElementById('form1').sort[2].click(); });
+		EventManager.register('ArrowDown', function() { nextOption('rtShowdays'); });
+		EventManager.register('ArrowUp', function() { nextOption('rtShowdays', true); });
+		EventManager.register('ArrowRight', function() { document.getElementById('next').click(); });
+		EventManager.register('ArrowLeft', function() { document.getElementById('pre').click(); });
+		EventManager.register('Escape', function() { document.getElementById('last').click(); });
+		EventManager.register('Enter', function() { nextOption('indecator'); });
+		EventManager.register('Tab', function() { nextOption('showdays'); });
+		EventManager.register('F1', function(e) { document.getElementById('cailianshe').click(); e.preventDefault(); });
+		EventManager.register('F2', function(e) { document.getElementById('jiuyan').click(); e.preventDefault(); });
+		EventManager.register('F3', function(e) { document.getElementById('taogu').click(); e.preventDefault(); });
+		EventManager.register('F4', function(e) { document.getElementById('wb-toggle-btn').click(); e.preventDefault(); });
 
 		$('#date').change(dateChange);
 		$('#pre').click(dateOnclick);
 		$('#next').click(dateOnclick);
 		$('#last').click(dateOnclick);
-		document.addEventListener('keydown', keyBoardEvent);
 		$('#jiuyan').click((e)=>{
 			e.preventDefault();
 			var url = "https://www.jiuyangongshe.com/action/" + Configure.getDateStr(Configure.date, '-');
@@ -375,9 +370,9 @@ var startup = (function(text) {
 					indecator.appendChild(option1);
 				}
 			};
-			Configure.setMode(mobile.isMobile() ? Configure.modeType.MB : $('#mode')[0].value);
+			Configure.setMode(mobile.isMobilePortrait() ? Configure.modeType.MP : $('#mode')[0].value);
 			$('#mode').change((e)=>{
-				Configure.setMode(mobile.isMobile() ? Configure.modeType.MB : $('#mode')[0].value);
+				Configure.setMode(mobile.isMobilePortrait() ? Configure.modeType.MP : $('#mode')[0].value);
 				updateIndicator();
 			});
 

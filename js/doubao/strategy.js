@@ -28,7 +28,7 @@ var DoubaoWorkbench = (function() {
 
     function createPanel() {
         var html = `
-          <div id="doubao-workbench" style="display:none; position:fixed; width:calc(100vw - 50px); height:calc(100vh - 50px); top:25px; left:25px;">
+          <div id="doubao-workbench" style="display:none; position:fixed; width:100vw; height:100vh; top:0; left:0; border-radius:0;">
             <div id="wb-header">
               <div class="wb-tabs">
                 <button class="wb-tab active" data-tab="strategy">📈 复盘</button>
@@ -149,7 +149,7 @@ var DoubaoWorkbench = (function() {
         // 聊天发送事件
         $('#chat-send-btn').on('click', sendChat);
         $('#chat-input').on('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) { e.preventDefault(); sendChat(); }
         });
 
         // 监控按钮事件
@@ -161,6 +161,8 @@ var DoubaoWorkbench = (function() {
         if (!panel) createPanel();
         panel.style.display = 'flex';
         visible = true;
+		
+		 EventManager.activatePanel(panel);
 
         // 每次显示时自动加载策略（如果尚未加载）
         if (!strategyLoaded) {
@@ -169,7 +171,13 @@ var DoubaoWorkbench = (function() {
         }
     }
 
-    function hide() { if (panel) panel.style.display = 'none'; visible = false; }
+    function hide() { 
+		if (panel) panel.style.display = 'none'; 
+		visible = false; 
+		
+		EventManager.deactivatePanel();
+	}
+	
     function toggle() { if (visible) hide(); else show(); }
 
 	function showProtocolMessage() {

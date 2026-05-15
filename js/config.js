@@ -24,7 +24,7 @@ var Configure = (function(){
 	var modeType = {
 		FP: 0,
 		DP: 1,
-		MB: 2,
+		MP: 2,
 	}
     
     // echelon 
