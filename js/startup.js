@@ -222,7 +222,7 @@ var startup = (function(text) {
 		EventManager.register('ArrowLeft', function() { document.getElementById('pre').click(); });
 		EventManager.register('Escape', function() { document.getElementById('last').click(); });
 		EventManager.register('Enter', function() { nextOption('indecator'); });
-		EventManager.register('Tab', function() { nextOption('showdays'); });
+		EventManager.register('Tab', function(e) { nextOption('showdays'); e.preventDefault();});
 		EventManager.register('F1', function(e) { document.getElementById('cailianshe').click(); e.preventDefault(); });
 		EventManager.register('F2', function(e) { document.getElementById('jiuyan').click(); e.preventDefault(); });
 		EventManager.register('F3', function(e) { document.getElementById('taogu').click(); e.preventDefault(); });
