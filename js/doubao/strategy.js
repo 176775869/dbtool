@@ -11,17 +11,19 @@ var DoubaoWorkbench = (function() {
     var currentStrategyMd = '';
 
     // ===== 协议配置（统一维护） =====
-    var CONFIG = {
-        PROTOCOL_VERSION: 'v3.0',
-        PROTOCOL_PATH: '/md/豆包模式规则手册 · 执行协议 v3.0.md',
-        PROTOCOL_FALLBACK: `📋 **当前执行协议：豆包模式 v3.0**
+	const CONFIG = {
+		get PROTOCOL_VERSION() { return Configure.PROTOCOL_VERSION; },
+		get PROTOCOL_PATH() { return `/md/豆包模式规则手册 · 执行协议 ${Configure.PROTOCOL_VERSION}.md`; },
+		get PROTOCOL_FALLBACK() {
+			return `📋 **当前执行协议：豆包模式 ${Configure.PROTOCOL_VERSION}**
 
-- 状态机包含 Ca/Cb/G1/D1/G2/Fa/P/E/B/BP/Ha/Hb/YG 等阶段
-- 当前市场状态判定、锚点切换规则、仓位纪律均依此执行
-- 详细内容见《豆包模式规则手册 · 执行协议 v3.0》
+	- 状态机包含 Ca/Cb/G1/D1/G2/Fa/P/E/B/BP/Ha/Hb/YG 等阶段
+	- 当前市场状态判定、锚点切换规则、仓位纪律均依此执行
+	- 详细内容见《豆包模式规则手册 · 执行协议 ${Configure.PROTOCOL_VERSION}》
 
-你可以直接向我提问复盘、策略或盘面相关的问题。`
-    };
+	你可以直接向我提问复盘、策略或盘面相关的问题。`;
+		}
+	};
 
     // 执行协议备用文本（兼容旧引用）
     var PROTOCOL_TEXT = CONFIG.PROTOCOL_FALLBACK;
@@ -39,12 +41,12 @@ var DoubaoWorkbench = (function() {
             </div>
             <div id="wb-content">
               <div id="tab-strategy" class="wb-panel active">
-			    <div class="doubao-actions" style="display:flex; align-items:center;">
-					<input type="text" id="custom-prompt-input" placeholder="输入额外指令（如：以今日数据为准，推翻旧结论）" 
-						   style="flex:1; padding:10px 8px; margin-right:6px; border:1px solid #ccc; 
-								  border-radius:4px; font-size:14px; min-width:0;">
-					<button class="btn-generate" id="btn-generate-strategy">⚡ 生成</button>
-				</div>
+                <div class="doubao-actions" style="display:flex; align-items:center;">
+                    <input type="text" id="custom-prompt-input" placeholder="输入额外指令（如：以今日数据为准，推翻旧结论）" 
+                           style="flex:1; padding:10px 8px; margin-right:6px; border:1px solid #ccc; 
+                                  border-radius:4px; font-size:14px; min-width:0;">
+                    <button class="btn-generate" id="btn-generate-strategy">⚡ 生成</button>
+                </div>
                 <div id="doubao-status"></div>
                 <div id="strategy-actions" style="display:none; margin-bottom:6px;">
                     <button id="btn-copy-strategy" title="复制原始Markdown" style="padding:2px 6px; margin-right:4px; border:1px solid #ccc; border-radius:3px; background:#f8f9fa; cursor:pointer; font-size:12px;">📋</button>
@@ -60,7 +62,7 @@ var DoubaoWorkbench = (function() {
                 </div>
               </div>
               <div id="tab-monitor" class="wb-panel">
-				<div style="display:flex; flex-direction:column; height:100%;">
+    			<div style="display:flex; flex-direction:column; height:100%;">
 					<div class="doubao-actions" style="display:flex; align-items:center;">
 						<button class="btn-generate" id="btn-toggle-monitor" style="background:#27ae60;">🔴 自动监控</button>
 						<button class="btn-generate" id="btn-manual-check" style="background:#666;">🔄 手动刷新</button>

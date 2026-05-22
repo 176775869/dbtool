@@ -26,6 +26,8 @@ var Configure = (function(){
 		DP: 1,
 		MP: 2,
 	}
+	
+	var PROTOCOL_VERSION = 'v3.1';
     
     // echelon 
 	var echelons = [
@@ -743,6 +745,7 @@ var Configure = (function(){
 		debug: debug,
 		Debug:Debug,
 		version:version,
+		PROTOCOL_VERSION:PROTOCOL_VERSION,
 		setMode:setMode,
 		getMode:getMode,
 		modeType:modeType,
