@@ -3,6 +3,68 @@ var parser = (function(){
 	var gaiNian = new Map();   // 所有概念  元素【概念，{times，weight}】:['猪肉'， {13, 0.24}]
 	
 	var dateToload;
+	
+	// 解析带中文单位的数字（亿/万），统一转为数字（元）
+	var parseNumberWithUnit = function(val) {
+		if (typeof val === 'number' && !isNaN(val)) return val;
+		if (typeof val === 'string') {
+			// 去除千位分隔符（如果有）
+			var cleaned = val.replace(/,/g, '').trim();
+			// 匹配“亿”
+			var match = cleaned.match(/^([\d.]+)\s*亿/);
+			if (match) {
+				return parseFloat(match[1]) * 100000000;
+			}
+			// 匹配“万”
+			match = cleaned.match(/^([\d.]+)\s*万/);
+			if (match) {
+				return parseFloat(match[1]) * 10000;
+			}
+			// 纯数字字符串
+			return parseFloat(cleaned);
+		}
+		return 0;
+	};
+	// 将中文“几天几板”转换为数字编码（兼容旧格式）
+	var parseBoardAndDayToNumber = function(val) {
+		// 如果已经是数字，直接返回
+		if (typeof val === 'number' && !isNaN(val)) return val;
+		// 如果是字符串，尝试解析
+		if (typeof val === 'string') {
+			var trimmed = val.trim();
+			var days = 0, boards = 0;
+			// 1. 匹配 "X天Y板"
+			var match = trimmed.match(/(\d+)天(\d+)板/);
+			if (match) {
+				days = parseInt(match[1]);
+				boards = parseInt(match[2]);
+			} else {
+				// 2. 匹配 "X连板"
+				match = trimmed.match(/(\d+)连板/);
+				if (match) {
+					days = parseInt(match[1]);
+					boards = parseInt(match[1]);
+				} else {
+					// 3. 匹配 "首板"（视为1天1板）
+					if (trimmed.includes('首板')) {
+						days = 1;
+						boards = 1;
+					} else {
+						// 无法解析，尝试直接转数字（可能旧数据直接是数字字符串）
+						var num = parseFloat(trimmed);
+						if (!isNaN(num)) return num;
+						// 否则返回默认值（1板1天）
+						days = 1;
+						boards = 1;
+					}
+				}
+			}
+			// 计算编码：number = board * 65537 + (days - board)
+			return boards * 65537 + (days - boards);
+		}
+		// 其他情况返回默认值（1板1天）
+		return 65537; // 1*65537 + 0
+	};
 		
 	var loadSheet = function(dateStr = Configure.getDateStr(Configure.date)) {
 		//避免重复加载
@@ -14,6 +76,25 @@ var parser = (function(){
 		tickets = workbook.getSheet(dateStr);
 		// 主动更新表头
 		Configure.updatetitle(dateStr);
+		
+		// ========== 新增：数据格式兼容清洗 ==========
+		tickets.forEach(function(ticket) {
+			// 1. 清洗“流通市值”（key 由 Configure.title.value 动态获取）
+			if (ticket[Configure.title.value]) {
+				ticket[Configure.title.value] = parseNumberWithUnit(ticket[Configure.title.value]);
+			}
+			// 2. 清洗“总金额”（key 由 Configure.title.turnOver 动态获取）
+			if (ticket[Configure.title.turnOver]) {
+				ticket[Configure.title.turnOver] = parseNumberWithUnit(ticket[Configure.title.turnOver]);
+			}
+			// 3. 保险：清洗“连续涨停天数”（万一哪天变成 "4连板" 格式）
+			var boardAndDayKey = Configure.title.boardAndDay; // 例如 "几天几板" 或 "几天几板[20260616]"
+			tickets.forEach(function(ticket) {
+				if (ticket[boardAndDayKey] !== undefined) {
+					ticket[boardAndDayKey] = parseBoardAndDayToNumber(ticket[boardAndDayKey]);
+				}
+			});
+		});
 		
 		///////
 		var totalscored = 0;      // 出现次数*该股票的连扳数*Configure.HIGH_factor，做后面计算权重的分母
@@ -41,6 +122,15 @@ var parser = (function(){
 			});
 			ticket[Configure.title.score] = parseInt(ticket[Configure.title.score]/totalscored * 1000);
 			
+			// 兼容获取连板数
+			var boardAndDayRaw = ticket[Configure.title.boardAndDay];
+			var boardNum = 1;
+			if (boardAndDayRaw) {
+				var match = String(boardAndDayRaw).match(/(\d+)/);
+				if (match) {
+					boardNum = parseInt(match[1]);
+				}
+			}
 			var dragon = dragons.getDragonStandard(
 						Configure.getDayBoard(ticket[Configure.title.boardAndDay]).b, ticket[Configure.title.code]);
 			// realValue 实际流通市值
@@ -61,6 +151,17 @@ var parser = (function(){
 				ticket[Configure.title.turnOver] = (ticket[Configure.title.realHandoverPercent] / 100)
 														* ticket[Configure.title.realValue] ;
 			}
+	console.log('===== 调试 ticket =====');
+console.log('代码:', ticket[Configure.title.code]);
+console.log('名称:', ticket[Configure.title.name]);
+console.log('Configure.title.value:', Configure.title.value, '原始值:', ticket[Configure.title.value]);
+console.log('Configure.title.price:', Configure.title.price, '原始值:', ticket[Configure.title.price]);
+console.log('Configure.title.orgProportion:', Configure.title.orgProportion, '原始值:', ticket[Configure.title.orgProportion]);
+console.log('dragon.realCirculateValue:', dragon.realCirculateValue);
+console.log('dragon.price:', dragon.price);
+console.log('当前计算的 realValue:', ticket[Configure.title.realValue]); // 若之前已计算
+console.log('当前计算的 realValueDivergence:', ticket[Configure.title.realValueDivergence]);
+console.log('当前计算的 priceDivergence:', ticket[Configure.title.priceDivergence]);
 			//筹码背离率  X10
 			ticket[Configure.title.profitDivergence] = ticket[Configure.title.profitProportion] - dragon.profitProportion > 0 ? 0 : 
 				parseFloat((ticket[Configure.title.profitProportion] - dragon.profitProportion)/dragon.profitProportion * 10).toFixed(2);
