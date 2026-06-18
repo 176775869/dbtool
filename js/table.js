@@ -373,7 +373,9 @@ var table = (function(){
 						}
 						break;
 					case 'value':
-						td.innerHTML = parseFloat(ticket[t.innerHTML]/100000000).toFixed(2);
+						    var raw = ticket[t.innerHTML];
+							var valInYuan = parser.parseNumberWithUnit(raw);
+							td.innerHTML = parseFloat(valInYuan / 100000000).toFixed(2);
 						break;
 					case 'gainianDragon':
 						td.innerHTML = td.innerHTML.substr(0,findIndexWithNum(td.innerHTML, '】', 2)+1);

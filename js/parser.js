@@ -151,17 +151,6 @@ var parser = (function(){
 				ticket[Configure.title.turnOver] = (ticket[Configure.title.realHandoverPercent] / 100)
 														* ticket[Configure.title.realValue] ;
 			}
-	console.log('===== 调试 ticket =====');
-console.log('代码:', ticket[Configure.title.code]);
-console.log('名称:', ticket[Configure.title.name]);
-console.log('Configure.title.value:', Configure.title.value, '原始值:', ticket[Configure.title.value]);
-console.log('Configure.title.price:', Configure.title.price, '原始值:', ticket[Configure.title.price]);
-console.log('Configure.title.orgProportion:', Configure.title.orgProportion, '原始值:', ticket[Configure.title.orgProportion]);
-console.log('dragon.realCirculateValue:', dragon.realCirculateValue);
-console.log('dragon.price:', dragon.price);
-console.log('当前计算的 realValue:', ticket[Configure.title.realValue]); // 若之前已计算
-console.log('当前计算的 realValueDivergence:', ticket[Configure.title.realValueDivergence]);
-console.log('当前计算的 priceDivergence:', ticket[Configure.title.priceDivergence]);
 			//筹码背离率  X10
 			ticket[Configure.title.profitDivergence] = ticket[Configure.title.profitProportion] - dragon.profitProportion > 0 ? 0 : 
 				parseFloat((ticket[Configure.title.profitProportion] - dragon.profitProportion)/dragon.profitProportion * 10).toFixed(2);
@@ -508,5 +497,7 @@ console.log('当前计算的 priceDivergence:', ticket[Configure.title.priceDive
 		getCombinedEchelon:getCombinedEchelon,
 		getBoardHeight:getBoardHeight,
 		getAllBoardedTicketsFromDays:getAllBoardedTicketsFromDays,
+		parseNumberWithUnit:parseNumberWithUnit,
+		parseBoardAndDayToNumber:parseBoardAndDayToNumber,
 	}
 })();
