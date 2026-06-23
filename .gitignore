@@ -1,52 +1,61 @@
-# Excel临时文件
+# ===== Excel 临时文件 =====
 Table.xls
 Table1.xls
 rt/复盘图表.xlsx
+
+# ===== 敏感配置（API Key） =====
 .env
 
-# 策略输出
+# ===== 策略输出（不提交 AI 生成内容） =====
 strategy_*.md
 
-# Python缓存
+# ===== Python 缓存 =====
 __pycache__/
 py/__pycache__/
 py/core/__pycache__/
+*.pyc
 
-# 采集器临时数据
+# ===== 采集器临时数据（每日采集，不提交） =====
 py/collectors/*.txt
 py/collectors/*.csv
 py/collectors/*.json
 
-# 数据目录临时文件
+# ===== 数据目录临时文件（每日采集，不提交） =====
 py/data/*.txt
 py/data/*.csv
 py/data/*.json
 
-# 自动生成的配置/数据文件
+# ===== 自动生成的配置/数据文件（运行时产生，不提交） =====
 py/config/candidate_scores.json
 py/config/history.json
 py/config/price_history.csv
 py/history.json
-py/price_history.csv
+py/price_history.json
 
-# 旧版遗留
+# ===== 日志与测试输出 =====
+server.log
+test_output.md
+*.patch
+tmp.sh
+
+# ===== 旧版遗留 =====
 py/last_strategy_date.txt
 
-# ===== 仅保留核心配置与锚点 =====
-!py/config/config.json
-!py/config/global_anchor.jsontest_output.md
-*.patch
-py/feeds/
+# ===== Windows 快捷启动脚本 =====
+服务器-*.bat
+服务器-*.vbs
 
-test_output.md
-server.log
-py/config/custom_prompt.txt
+# ===== 投喂缓存目录 =====
+py/feeds/
 py/data/feeds/
-server.log
+
+# ===== 进化笔记（AI 自省记录，可选提交） =====
 py/config/evolution_log.txt
 py/config/evolution_log.ser.txt
 
-tmp.sh
+# ===== 自定义提示（可选） =====
+py/config/custom_prompt.txt
 
-服务器-*.bat
-服务器-*.vbs
+# ===== 保留核心配置（强制提交） =====
+!py/config/config.json
+!py/config/global_anchor.json

@@ -7,6 +7,7 @@ User Prompt 仅包含场景指令和用户自定义指令
 import os
 import glob
 import json
+import requests
 from datetime import datetime
 
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), '..', 'config')
@@ -42,11 +43,52 @@ def load_config():
         return json.load(f)
 
 def load_holidays():
-    cal_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'trade_calendar.json')
+    """加载交易日历：优先从网络获取最新假期，失败则从本地 config 读取"""
+    config_dir = os.path.join(os.path.dirname(__file__), '..', 'config')
+    cal_path = os.path.join(config_dir, 'trade_calendar.json')
+    holidays_set = set()
+    
+    # 1. 尝试从网络获取（timor.tech 免费假期 API）
+    try:
+        current_year = datetime.now().year
+        # 获取当前年份和前一年（覆盖跨年，如 2026-01-01 需要 2026 年数据，而 2025-12-31 需要 2025 年数据）
+        years_to_fetch = [current_year, current_year - 1]
+        all_holidays = {}
+        
+        for year in years_to_fetch:
+            url = f"https://timor.tech/api/holiday/year/{year}"
+            resp = requests.get(url, timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get('code') == 0:
+                    holiday_dict = data.get('holiday', {})
+                    # holiday_dict 的 key 是日期字符串，如 '2026-01-01'
+                    all_holidays.update(holiday_dict)
+        
+        if all_holidays:
+            # 网络获取成功，更新本地缓存文件
+            os.makedirs(config_dir, exist_ok=True)
+            with open(cal_path, 'w', encoding='utf-8') as f:
+                json.dump({'holidays': sorted(all_holidays.keys())}, f, ensure_ascii=False, indent=2)
+            print(f"[PROMPT] 已从网络更新交易日历，共 {len(all_holidays)} 个假期")
+            return set(all_holidays.keys())
+    except Exception as e:
+        print(f"[PROMPT] 网络获取假期失败: {e}，尝试读取本地缓存...")
+
+    # 2. 网络失败，从本地 config 目录读取
     if os.path.exists(cal_path):
-        with open(cal_path, 'r', encoding='utf-8') as f:
-            return set(json.load(f).get('holidays', []))
-    return set()
+        try:
+            with open(cal_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                holidays_set = set(data.get('holidays', []))
+            print(f"[PROMPT] 从本地加载假期，共 {len(holidays_set)} 天")
+        except Exception as e:
+            print(f"[PROMPT] 读取本地假期文件失败: {e}")
+            return set()
+    else:
+        print("[PROMPT] 本地假期文件不存在，且网络获取失败，将不使用假期判断（默认所有工作日均为交易日）")
+    
+    return holidays_set
 
 def is_trade_day(dt, holidays_set):
     if dt.weekday() >= 5:
