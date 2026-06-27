@@ -244,7 +244,7 @@ var canvas = (function(canvas) {
 					cycle.cycles.includes('H') || cycle.cycles.includes('P') ? 'black' :
 					cycle.cycles.includes('s') || cycle.cycles.includes('S') ? 'grey' : Configure.site_color;
 				// 宏观周期阶段
-				if (/[TtQqMmHP]/.test(cycle.cycles)) {
+				if (/[TtQqMmHPs]/.test(cycle.cycles)) {
 					ctx.fillText(/[Ww]/.test(cycle.cycles) ? 
 									cycle.cycles.substring(0, cycle.cycles.indexOf('w')) : cycle.cycles, 
 									siteX + cellWidth  * i, siteY -5);
